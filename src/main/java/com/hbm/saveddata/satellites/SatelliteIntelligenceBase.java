@@ -1,9 +1,13 @@
 package com.hbm.saveddata.satellites;
 
+import com.hbm.saveddata.satellites.intel.IntelBlockClassifier;
 import com.hbm.saveddata.satellites.intel.IntelScanJob;
 import com.hbm.saveddata.satellites.intel.IntelScanMode;
 import com.hbm.saveddata.satellites.intel.IntelScanResult;
 import com.hbm.saveddata.satellites.intel.IntelScanState;
+import com.hbm.saveddata.satellites.intel.IntelStructuralAnalyzer;
+import com.hbm.saveddata.satellites.intel.IntelSubsurfaceScanner;
+import com.hbm.saveddata.satellites.intel.IntelSurfaceScanner;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -19,6 +23,11 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	public static final String CMD_SURFACE = "surface";
 	public static final String CMD_SUBSURFACE = "subsurface";
 	public static final String CMD_STRUCTURE = "structure";
+
+	protected final IntelBlockClassifier intelClassifier = new IntelBlockClassifier();
+	protected final IntelSurfaceScanner surfaceScanner = new IntelSurfaceScanner(intelClassifier);
+	protected final IntelSubsurfaceScanner subsurfaceScanner = new IntelSubsurfaceScanner(intelClassifier);
+	protected final IntelStructuralAnalyzer structuralAnalyzer = new IntelStructuralAnalyzer(intelClassifier);
 
 	public IntelScanJob activeJob;
 	public IntelScanResult lastResult;
@@ -102,7 +111,13 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 			} else if(lastResult == null || lastResult.structuralSummary == null) {
 				tx = "NO_DATA";
 			} else {
-				tx = "STRUCTURE;AVG=" + lastResult.structuralSummary.averageResistance + ";MAX=" + lastResult.structuralSummary.maxResistance + ";WEAK=" + lastResult.structuralSummary.weakPointCount;
+				tx = "STRUCTURE;MATERIAL=" + lastResult.structuralSummary.dominantMaterial
+						+ ";AVG=" + lastResult.structuralSummary.averageResistance
+						+ ";MAX=" + lastResult.structuralSummary.maxResistance
+						+ ";WALL=" + lastResult.structuralSummary.wallThickness
+						+ ";ROOF=" + lastResult.structuralSummary.roofThickness
+						+ ";FLOOR=" + lastResult.structuralSummary.floorThickness
+						+ ";WEAK=" + lastResult.structuralSummary.weakPointCount;
 			}
 		}
 	}
@@ -113,13 +128,73 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	}
 
 	protected void processScanTick(World world) {
-		// Scanner phases are wired by the surface/subsurface/combined implementation tasks.
+		if(world == null || world.isRemote || activeJob == null || lastResult == null) return;
+		try {
+			if(getScanMode() == IntelScanMode.SURFACE) {
+				surfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) finishOrFail(world);
+				return;
+			}
+
+			if(getScanMode() == IntelScanMode.SUBSURFACE) {
+				subsurfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
+					subsurfaceScanner.finalizeFindings(lastResult);
+					finishOrFail(world);
+				}
+				return;
+			}
+
+			if(activeJob.phase == 0) {
+				surfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
+					activeJob.phase = 1;
+					activeJob.phaseCursor = 0;
+				}
+				return;
+			}
+
+			if(activeJob.phase == 1) {
+				subsurfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
+					subsurfaceScanner.finalizeFindings(lastResult);
+					activeJob.phase = 2;
+					activeJob.phaseCursor = 0;
+				}
+				return;
+			}
+
+			if(activeJob.phase == 2) {
+				structuralAnalyzer.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				if(activeJob.phaseCursor >= structuralAnalyzer.getCandidateCount(lastResult)) {
+					lastResult.structuralSummary = structuralAnalyzer.finalizeSummary(lastResult);
+					activeJob.processedWork = activeJob.totalWork;
+					onIntelligenceReady(lastResult);
+					finishOrFail(world);
+				}
+			}
+		} catch(Throwable t) {
+			failScan(t.getClass().getSimpleName());
+		}
+	}
+
+	protected void onIntelligenceReady(IntelScanResult result) { }
+
+	private void finishOrFail(World world) {
+		if(lastResult.coveredColumns <= 0) {
+			tx = "UNLOADED";
+			failScan("UNLOADED");
+			return;
+		}
+		onIntelligenceReady(lastResult);
+		completeScan(world);
 	}
 
 	protected void completeScan(World world) {
 		if(lastResult != null) lastResult.completedAt = world.getTotalWorldTime();
 		if(activeJob != null) activeJob.state = IntelScanState.COMPLETE;
 		lastState = IntelScanState.COMPLETE;
+		tx = "COMPLETE";
 		activeJob = null;
 		markDirty();
 	}
@@ -137,8 +212,6 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
-		// SatelliteBase in this branch has legacy inverted base persistence helpers;
-		// explicitly preserve intelligence satellite target/tx state here.
 		nbt.setInteger("intelTargetX", targetX);
 		nbt.setInteger("intelTargetZ", targetZ);
 		nbt.setString("intelTx", tx == null ? "" : tx);
