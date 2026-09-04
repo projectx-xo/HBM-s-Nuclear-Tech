@@ -2,17 +2,23 @@ package com.hbm.saveddata.satellites;
 
 import com.hbm.items.ModItems;
 import com.hbm.items.special.ItemSatellite.EnumSatType;
+import com.hbm.saveddata.satellites.intel.IntelScanMode;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
-public class SatelliteSubsurfaceIntel extends SatelliteBase {
+public class SatelliteSubsurfaceIntel extends SatelliteIntelligenceBase {
 
 	@Override
 	public String getType() {
 		return "SUBSURFACE_INTEL";
+	}
+
+	@Override
+	public IntelScanMode getScanMode() {
+		return IntelScanMode.SUBSURFACE;
 	}
 
 	@Override
