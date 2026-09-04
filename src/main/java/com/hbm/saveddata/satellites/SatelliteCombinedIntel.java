@@ -3,15 +3,12 @@ package com.hbm.saveddata.satellites;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.hbm.items.ModItems;
-import com.hbm.items.special.ItemSatellite.EnumSatType;
 import com.hbm.saveddata.satellites.intel.IntelClassification;
 import com.hbm.saveddata.satellites.intel.IntelFinding;
 import com.hbm.saveddata.satellites.intel.IntelScanMode;
 import com.hbm.saveddata.satellites.intel.IntelScanResult;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 
@@ -107,8 +104,6 @@ public class SatelliteCombinedIntel extends SatelliteIntelligenceBase {
 
 	@Override
 	public IChatComponent[] getInfo(World world) {
-		return new IChatComponent[] {
-				new ChatComponentTranslation(ModItems.satellite.getUnlocalizedName(new ItemStack(ModItems.satellite, 1, EnumSatType.COMBINED_INTEL.ordinal())) + ".name")
-		};
+		return new IChatComponent[] { new ChatComponentText("Combined Intelligence Satellite") };
 	}
 }
