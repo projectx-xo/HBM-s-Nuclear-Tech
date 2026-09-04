@@ -870,6 +870,8 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 				.inputItems(new ComparableStack(ModItems.seg_20, 1), new OreDictStack(DURA.pipe(), 6), new OreDictStack(W.ingot(), 16), new OreDictStack(STEEL.plate(), 16)));
 
 		// custom missile fuselages
+		this.register(new GenericRecipe("ass.mpf20solidminuteman").setup(400, 100).outputItems(new ItemStack(ModItems.mp_fuselage_20_solid_minuteman, 1))
+				.inputItems(new ComparableStack(ModItems.seg_20, 2), new OreDictStack(TI.plate(), 48), new OreDictStack(STEEL.plate(), 16)));
 		this.register(new GenericRecipe("ass.mpf10kero").setup(100, 100).outputItems(new ItemStack(ModItems.mp_fuselage_10_kerosene, 1))
 				.inputItems(new ComparableStack(ModItems.seg_10, 2), new OreDictStack(AL.plate(), 12), new OreDictStack(STEEL.plate(), 3)));
 		this.register(new GenericRecipe("ass.mpf10kerolong").setup(100, 100).outputItems(new ItemStack(ModItems.mp_fuselage_10_long_kerosene, 1))
@@ -900,6 +902,14 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 				.inputItems(new ComparableStack(ModItems.seg_15, 1), new ComparableStack(ModItems.seg_20, 1), new OreDictStack(TI.plate(), 48), new OreDictStack(STEEL.plate(), 16)));
 
 		// custom missile warheads
+		this.register(new GenericRecipe("ass.mpw20busterminuteman").setup(400, 100).outputItems(new ItemStack(ModItems.mp_warhead_20_buster_minuteman, 1))
+				.inputItems(new ComparableStack(ModItems.seg_20, 1), new OreDictStack(WEAPONSTEEL.plate(), 32), new OreDictStack(W.ingot(), 16), new OreDictStack(ANY_HIGHEXPLOSIVE.ingot(), 12), new ComparableStack(ModItems.circuit, 4, EnumCircuitType.ADVANCED)));
+		this.register(new GenericRecipe("ass.mpw20heminuteman").setup(400, 100).outputItems(new ItemStack(ModItems.mp_warhead_20_he_minuteman, 1))
+				.inputItems(new ComparableStack(ModItems.seg_20, 1), new OreDictStack(STEEL.plate(), 24), new OreDictStack(ANY_HIGHEXPLOSIVE.ingot(), 24), new ComparableStack(ModItems.circuit, 6, EnumCircuitType.BASIC)));
+		this.register(new GenericRecipe("ass.mpw20txminuteman").setup(800, 100).outputItems(new ItemStack(ModItems.mp_warhead_20_thermonuclear_minuteman, 1))
+				.inputItems(new ComparableStack(ModItems.seg_20, 1), new ComparableStack(ModItems.mp_warhead_15_nuclear, 1), new OreDictStack(WEAPONSTEEL.plate(), 24), new ComparableStack(ModItems.part_lithium, 16), new ComparableStack(ModItems.ball_tatb, 24), new ComparableStack(ModItems.circuit, 3, EnumCircuitType.CONTROLLER))
+				.setPools528(GenericRecipes.POOL_PREFIX_528 + "controller"));
+
 		this.register(new GenericRecipe("ass.mpw10he").setup(100, 100).outputItems(new ItemStack(ModItems.mp_warhead_10_he, 1))
 				.inputItems(new ComparableStack(ModItems.seg_10, 1), new OreDictStack(STEEL.plate(), 6), new OreDictStack(ANY_HIGHEXPLOSIVE.ingot(), 3), new ComparableStack(ModItems.circuit, 1, EnumCircuitType.BASIC)));
 		this.register(new GenericRecipe("ass.mpw10inc").setup(100, 100).outputItems(new ItemStack(ModItems.mp_warhead_10_incendiary, 1))

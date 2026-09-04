@@ -100,6 +100,8 @@ repositories {
 }
 
 dependencies {
+	testImplementation('junit:junit:4.13.2')
+
 	implementation('codechicken:CodeChickenCore:1.7.10-1.0.4.29:dev') { transitive = false }
 	compileOnly('codechicken:CodeChickenCore:1.7.10-1.0.4.29:src') { transitive = false }
 

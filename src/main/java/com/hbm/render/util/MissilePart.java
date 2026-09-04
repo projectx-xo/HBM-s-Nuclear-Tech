@@ -148,6 +148,7 @@ public class MissilePart {
 		MissilePart.registerPart(ModItems.mp_fuselage_15_20_kerosene_magnusson, PartType.FUSELAGE, 16, 10, ResourceManager.mp_f_15_20_kerosene, ResourceManager.mp_f_15_20_kerosene_magnusson_tex);
 		MissilePart.registerPart(ModItems.mp_fuselage_15_20_solid, PartType.FUSELAGE, 16, 10, ResourceManager.mp_f_15_20_kerosene, ResourceManager.mp_f_15_20_solid_tex);
 		MissilePart.registerPart(ModItems.mp_fuselage_15_20_solid_minuteman, PartType.FUSELAGE, 16, 10, ResourceManager.mp_f_15_20_kerosene, ResourceManager.mp_f_15_20_solid_minuteman_tex);
+		MissilePart.registerPart(ModItems.mp_fuselage_20_solid_minuteman, PartType.FUSELAGE, 16, 10, ResourceManager.mp_f_20_minuteman, ResourceManager.mp_f_15_20_solid_minuteman_tex);
 
 		//////
 		
@@ -168,6 +169,9 @@ public class MissilePart {
 		MissilePart.registerPart(ModItems.mp_warhead_15_n2, PartType.WARHEAD, 3, 2, ResourceManager.mp_w_15_n2, ResourceManager.mp_w_15_n2_tex);
 		MissilePart.registerPart(ModItems.mp_warhead_15_balefire, PartType.WARHEAD, 2.75, 2, ResourceManager.mp_w_15_balefire, ResourceManager.mp_w_15_balefire_tex);
 		MissilePart.registerPart(ModItems.mp_warhead_15_turbine, PartType.WARHEAD, 2.25, 2, ResourceManager.mp_w_15_turbine, ResourceManager.mp_w_15_turbine_tex);
+		MissilePart.registerPart(ModItems.mp_warhead_20_buster_minuteman, PartType.WARHEAD, 3, 3, ResourceManager.mp_w_20_minuteman, ResourceManager.mp_w_20_minuteman_tex);
+		MissilePart.registerPart(ModItems.mp_warhead_20_he_minuteman, PartType.WARHEAD, 3, 3, ResourceManager.mp_w_20_minuteman, ResourceManager.mp_w_20_minuteman_tex);
+		MissilePart.registerPart(ModItems.mp_warhead_20_thermonuclear_minuteman, PartType.WARHEAD, 3, 3, ResourceManager.mp_w_20_minuteman, ResourceManager.mp_w_20_minuteman_tex);
 	}
 	
 	public static void registerPart(Item item, PartType type, double height, double guiheight, IModelCustom model, ResourceLocation texture) {

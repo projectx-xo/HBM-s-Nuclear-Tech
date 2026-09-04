@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import com.hbm.entity.missile.EntityMissileCustom;
+import com.hbm.explosion.BunkerBusterPenetration;
 import com.hbm.items.special.ItemLootCrate;
 import com.hbm.lib.RefStrings;
 import com.hbm.main.MainRegistry;
@@ -92,7 +93,8 @@ public class ItemCustomMissilePart extends Item {
 		TURBINE,
 
 		//shit solution but it works. this allows traits to be attached to these empty dummy types, allowing for custom warheads
-		CUSTOM0, CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5, CUSTOM6, CUSTOM7, CUSTOM8, CUSTOM9;
+		CUSTOM0, CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5, CUSTOM6, CUSTOM7, CUSTOM8, CUSTOM9,
+		BUSTER_PENETRATING;
 
 		/** Overrides that type's impact effect. Only runs serverside */
 		public Consumer<EntityMissileCustom> impactCustom = null;
@@ -214,6 +216,11 @@ public class ItemCustomMissilePart extends Item {
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.type") + ": " + EnumChatFormatting.GRAY + getWarhead((WarheadType)attributes[0]));
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.strength") + ": " + EnumChatFormatting.GRAY + (Float)attributes[1]);
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.weight") + ": " + EnumChatFormatting.GRAY + (Float)attributes[2] + "t");
+					if(attributes[0] == WarheadType.BUSTER_PENETRATING) {
+						list.add(EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.missile.part.penetration", (int) BunkerBusterPenetration.MAX_RESISTANCE));
+						list.add(EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.missile.part.arming", (int) BunkerBusterPenetration.ARMING_RESISTANCE));
+						list.add(EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.missile.part.penetrationDepth", BunkerBusterPenetration.MAX_DEPTH));
+					}
 					break;
 				case FUSELAGE:
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.topSize") + ": " + EnumChatFormatting.GRAY + getSize(top));
@@ -275,6 +282,7 @@ public class ItemCustomMissilePart extends Item {
 			case CLUSTER:
 				return EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.warhead.desc.cluster");
 			case BUSTER:
+			case BUSTER_PENETRATING:
 				return EnumChatFormatting.WHITE + I18nUtil.resolveKey("item.warhead.desc.bunker_buster");
 			case NUCLEAR:
 				return EnumChatFormatting.DARK_GREEN + I18nUtil.resolveKey("item.warhead.desc.nuclear");

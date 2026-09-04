@@ -1301,6 +1301,7 @@ public class ModItems {
 	public static Item mp_fuselage_15_20_kerosene_magnusson;
 	public static Item mp_fuselage_15_20_solid;
 	public static Item mp_fuselage_15_20_solid_minuteman;
+	public static Item mp_fuselage_20_solid_minuteman;
 
 	public static Item mp_warhead_10_he;
 	public static Item mp_warhead_10_incendiary;
@@ -1318,6 +1319,9 @@ public class ModItems {
 	public static Item mp_warhead_15_n2;
 	public static Item mp_warhead_15_balefire;
 	public static Item mp_warhead_15_turbine;
+	public static Item mp_warhead_20_buster_minuteman;
+	public static Item mp_warhead_20_he_minuteman;
+	public static Item mp_warhead_20_thermonuclear_minuteman;
 
 	public static Item mp_chip_1;
 	public static Item mp_chip_2;
@@ -3544,6 +3548,7 @@ public class ModItems {
 		mp_fuselage_15_20_kerosene_magnusson = ((ItemCustomMissilePart)mp_fuselage_15_20_kerosene).copy().setRarity(Rarity.RARE).setAuthor("VT-6/24").setTitle("White Forest Rocket").setWittyText("And get your cranio-conjugal parasite away from my nose cone!").setUnlocalizedName("mp_fuselage_15_20_kerosene_magnusson");
 		mp_fuselage_15_20_solid = new ItemCustomMissilePart().makeFuselage(FuelType.SOLID, 20000, PartSize.SIZE_15, PartSize.SIZE_20).setHealth(70F).setUnlocalizedName("mp_fuselage_15_20_solid").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_fuselage");
 		mp_fuselage_15_20_solid_minuteman = ((ItemCustomMissilePart) mp_fuselage_15_20_solid).copy().setRarity(Rarity.UNCOMMON).setTitle("Minuteman III").setUnlocalizedName("mp_fuselage_15_20_solid_minuteman");
+		mp_fuselage_20_solid_minuteman = new ItemCustomMissilePart().makeFuselage(FuelType.SOLID, 20000, PartSize.SIZE_20, PartSize.SIZE_20).setHealth(70F).setTitle("Minuteman III").setUnlocalizedName("mp_fuselage_20_solid_minuteman");
 
 		mp_warhead_10_he = new ItemCustomMissilePart().makeWarhead(WarheadType.HE, 15F, 1.5F, PartSize.SIZE_10).setHealth(5F)								.setUnlocalizedName("mp_warhead_10_he").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
 		mp_warhead_10_incendiary = new ItemCustomMissilePart().makeWarhead(WarheadType.INC, 15F, 1.5F, PartSize.SIZE_10).setHealth(5F)					.setUnlocalizedName("mp_warhead_10_incendiary").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
@@ -3561,6 +3566,9 @@ public class ModItems {
 		mp_warhead_15_n2 = new ItemCustomMissilePart().makeWarhead(WarheadType.N2, 100F, 5F, PartSize.SIZE_15).setWittyText("[screams geometrically]").setHealth(20F).setRarity(Rarity.RARE).setUnlocalizedName("mp_warhead_15_n2").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
 		mp_warhead_15_balefire = new ItemCustomMissilePart().makeWarhead(WarheadType.BALEFIRE, 100F, 7.5F, PartSize.SIZE_15).setRarity(Rarity.LEGENDARY).setAuthor("VT-6/24").setHealth(15F).setWittyText("Hightower, never forgetti.").setUnlocalizedName("mp_warhead_15_balefire").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
 		mp_warhead_15_turbine = new ItemCustomMissilePart().makeWarhead(WarheadType.TURBINE, 200F, 5F, PartSize.SIZE_15).setRarity(Rarity.SEWS_CLOTHES_AND_SUCKS_HORSE_COCK).setHealth(250F).setUnlocalizedName("mp_warhead_15_turbine").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
+		mp_warhead_20_buster_minuteman = new ItemCustomMissilePart().makeWarhead(WarheadType.BUSTER_PENETRATING, 20F, 10F, PartSize.SIZE_20).setHealth(40F).setTitle("Minuteman III").setUnlocalizedName("mp_warhead_20_buster_minuteman");
+		mp_warhead_20_he_minuteman = new ItemCustomMissilePart().makeWarhead(WarheadType.HE, 75F, 7.5F, PartSize.SIZE_20).setHealth(25F).setTitle("Minuteman III").setUnlocalizedName("mp_warhead_20_he_minuteman");
+		mp_warhead_20_thermonuclear_minuteman = new ItemCustomMissilePart().makeWarhead(WarheadType.TX, 250F, 10F, PartSize.SIZE_20).setHealth(35F).setTitle("Minuteman III").setUnlocalizedName("mp_warhead_20_thermonuclear_minuteman");
 
 		mp_chip_1 = new ItemCustomMissilePart().makeChip(0.1F)	.setUnlocalizedName("mp_c_1").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_c_1");
 		mp_chip_2 = new ItemCustomMissilePart().makeChip(0.05F)	.setUnlocalizedName("mp_c_2").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_c_2");
@@ -5664,6 +5672,7 @@ public class ModItems {
 		GameRegistry.registerItem(mp_fuselage_15_20_kerosene_magnusson, mp_fuselage_15_20_kerosene_magnusson.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_15_20_solid, mp_fuselage_15_20_solid.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_15_20_solid_minuteman, mp_fuselage_15_20_solid_minuteman.getUnlocalizedName());
+		GameRegistry.registerItem(mp_fuselage_20_solid_minuteman, mp_fuselage_20_solid_minuteman.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_10_he, mp_warhead_10_he.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_10_incendiary, mp_warhead_10_incendiary.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_10_buster, mp_warhead_10_buster.getUnlocalizedName());
@@ -5680,6 +5689,9 @@ public class ModItems {
 		GameRegistry.registerItem(mp_warhead_15_n2, mp_warhead_15_n2.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_15_balefire, mp_warhead_15_balefire.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_15_turbine, mp_warhead_15_turbine.getUnlocalizedName());
+		GameRegistry.registerItem(mp_warhead_20_buster_minuteman, mp_warhead_20_buster_minuteman.getUnlocalizedName());
+		GameRegistry.registerItem(mp_warhead_20_he_minuteman, mp_warhead_20_he_minuteman.getUnlocalizedName());
+		GameRegistry.registerItem(mp_warhead_20_thermonuclear_minuteman, mp_warhead_20_thermonuclear_minuteman.getUnlocalizedName());
 		GameRegistry.registerItem(mp_chip_1, mp_chip_1.getUnlocalizedName());
 		GameRegistry.registerItem(mp_chip_2, mp_chip_2.getUnlocalizedName());
 		GameRegistry.registerItem(mp_chip_3, mp_chip_3.getUnlocalizedName());

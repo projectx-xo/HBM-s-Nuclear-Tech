@@ -10,6 +10,7 @@ import com.hbm.entity.logic.EntityNukeExplosionMK5;
 import com.hbm.entity.logic.IChunkLoader;
 import com.hbm.entity.projectile.EntityBulletBaseNT;
 import com.hbm.explosion.ExplosionChaos;
+import com.hbm.explosion.ExplosionBunkerBuster;
 import com.hbm.explosion.ExplosionLarge;
 import com.hbm.handler.BulletConfigSyncingUtil;
 import com.hbm.handler.MissileStruct;
@@ -187,6 +188,9 @@ public class EntityMissileCustom extends EntityMissileBaseNT implements IChunkLo
 			break;
 		case BUSTER:
 			ExplosionLarge.buster(worldObj, posX, posY, posZ, Vec3.createVectorHelper(motionX, motionY, motionZ), strength, strength * 4);
+			break;
+		case BUSTER_PENETRATING:
+			ExplosionBunkerBuster.detonate(worldObj, mop, Vec3.createVectorHelper(motionX, motionY, motionZ), strength);
 			break;
 		case NUCLEAR:
 		case TX:
