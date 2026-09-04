@@ -181,6 +181,7 @@ public class WeaponRecipes {
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_10_space, 1), new Object[] { "ASA", "PSP", 'A', AL.plate(), 'P', STEEL.ingot(), 'S', ModBlocks.steel_scaffold });
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_15_flat, 1), new Object[] { "ASA", "PSP", 'A', AL.plate(), 'P', STEEL.plate(), 'S', ModBlocks.steel_scaffold });
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_15_thin, 1), new Object[] { "A A", "PSP", "PSP", 'A', AL.plate(), 'P', STEEL.plate(), 'S', ModBlocks.steel_scaffold });
+		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_20_white, 1), new Object[] { "ASA", "PSP", "D D", 'A', AL.plate(), 'P', STEEL.plate(), 'S', ModBlocks.steel_scaffold, 'D', "dyeWhite" });
 
 		//Missile thrusters
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_thruster_15_balefire_large_rad, 1), new Object[] { "CCC", "CTC", "CCC", 'C', CU.plateCast(), 'T', ModItems.mp_thruster_15_balefire_large });

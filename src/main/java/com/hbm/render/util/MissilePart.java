@@ -67,6 +67,7 @@ public class MissilePart {
 		MissilePart.registerPart(ModItems.mp_stability_15_soyuz, PartType.FINS, 0, 3, ResourceManager.mp_s_15_soyuz, ResourceManager.mp_s_15_soyuz_tex);
 		//
 		MissilePart.registerPart(ModItems.mp_stability_20_flat, PartType.FINS, 0, 3, ResourceManager.mp_s_20, ResourceManager.universal);
+		MissilePart.registerPart(ModItems.mp_stability_20_white, PartType.FINS, 0, 3, ResourceManager.mp_s_20_white, ResourceManager.mp_f_15_20_solid_minuteman_tex);
 
 		//////
 		

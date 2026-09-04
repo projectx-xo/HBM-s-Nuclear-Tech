@@ -1215,6 +1215,7 @@ public class ModItems {
 	public static Item mp_stability_15_thin;
 	public static Item mp_stability_15_soyuz;
 	public static Item mp_stability_20_flat;
+	public static Item mp_stability_20_white;
 
 	public static Item mp_fuselage_10_kerosene;
 	public static Item mp_fuselage_10_kerosene_camo;
@@ -3462,6 +3463,7 @@ public class ModItems {
 		mp_stability_15_thin = new ItemCustomMissilePart().makeStability(0.35F, PartSize.SIZE_15).setHealth(5F)												.setUnlocalizedName("mp_stability_15_thin");
 		mp_stability_15_soyuz = new ItemCustomMissilePart().makeStability(0.25F, PartSize.SIZE_15).setHealth(15F).setRarity(Rarity.COMMON).setWittyText("Союз!").setUnlocalizedName("mp_stability_15_soyuz");
 		mp_stability_20_flat = new ItemCustomMissilePart().makeStability(0.5F, PartSize.SIZE_20)															.setUnlocalizedName("mp_s_20");
+		mp_stability_20_white = new ItemCustomMissilePart().makeStability(0.5F, PartSize.SIZE_20).setHealth(10F).setUnlocalizedName("mp_stability_20_white");
 
 		mp_fuselage_10_kerosene = new ItemCustomMissilePart().makeFuselage(FuelType.KEROSENE, 2500F, PartSize.SIZE_10, PartSize.SIZE_10).setAuthor("Hoboy").setHealth(20F).setUnlocalizedName("mp_fuselage_10_kerosene");
 		mp_fuselage_10_kerosene_camo =			((ItemCustomMissilePart) mp_fuselage_10_kerosene).copy().setRarity(Rarity.COMMON).setTitle("Camo").setUnlocalizedName("mp_fuselage_10_kerosene_camo");
@@ -5597,6 +5599,7 @@ public class ModItems {
 		GameRegistry.registerItem(mp_stability_15_thin, mp_stability_15_thin.getUnlocalizedName());
 		GameRegistry.registerItem(mp_stability_15_soyuz, mp_stability_15_soyuz.getUnlocalizedName());
 		GameRegistry.registerItem(mp_stability_20_flat, mp_stability_20_flat.getUnlocalizedName());
+		GameRegistry.registerItem(mp_stability_20_white, mp_stability_20_white.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_10_kerosene, mp_fuselage_10_kerosene.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_10_kerosene_camo, mp_fuselage_10_kerosene_camo.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_10_kerosene_desert, mp_fuselage_10_kerosene_desert.getUnlocalizedName());
