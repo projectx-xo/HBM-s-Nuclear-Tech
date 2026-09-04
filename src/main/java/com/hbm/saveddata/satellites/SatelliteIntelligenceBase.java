@@ -30,6 +30,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	protected final IntelStructuralAnalyzer structuralAnalyzer = new IntelStructuralAnalyzer(intelClassifier);
 
 	public IntelScanJob activeJob;
+	public IntelScanResult activeResult;
 	public IntelScanResult lastResult;
 	protected IntelScanState lastState = IntelScanState.IDLE;
 
@@ -60,14 +61,15 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		result.dimension = world.provider.dimensionId;
 		result.startedAt = world.getTotalWorldTime();
 		result.totalColumns = SCAN_SIZE * SCAN_SIZE;
-		lastResult = result;
+		activeResult = result;
 		markDirty();
 		return true;
 	}
 
 	public String getScanStatus() {
 		if(activeJob != null) {
-			return activeJob.state.name() + ";" + activeJob.processedWork + ";" + activeJob.totalWork + ";" + activeJob.getProgressPercent();
+			int coverage = activeResult == null ? 0 : activeResult.getCoveragePercent();
+			return activeJob.state.name() + ";" + activeJob.processedWork + ";" + activeJob.totalWork + ";" + coverage;
 		}
 		int coverage = lastResult == null ? 0 : lastResult.getCoveragePercent();
 		return lastState.name() + ";0;0;" + coverage;
@@ -79,6 +81,10 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 
 	public IntelScanResult getLastResult() {
 		return lastResult;
+	}
+
+	public IntelScanResult getActiveResult() {
+		return activeResult;
 	}
 
 	@Override
@@ -128,25 +134,25 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	}
 
 	protected void processScanTick(World world) {
-		if(world == null || world.isRemote || activeJob == null || lastResult == null) return;
+		if(world == null || world.isRemote || activeJob == null || activeResult == null) return;
 		try {
 			if(getScanMode() == IntelScanMode.SURFACE) {
-				surfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				surfaceScanner.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
 				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) finishOrFail(world);
 				return;
 			}
 
 			if(getScanMode() == IntelScanMode.SUBSURFACE) {
-				subsurfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				subsurfaceScanner.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
 				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
-					subsurfaceScanner.finalizeFindings(lastResult);
+					subsurfaceScanner.finalizeFindings(activeResult);
 					finishOrFail(world);
 				}
 				return;
 			}
 
 			if(activeJob.phase == 0) {
-				surfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				surfaceScanner.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
 				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
 					activeJob.phase = 1;
 					activeJob.phaseCursor = 0;
@@ -155,9 +161,9 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 			}
 
 			if(activeJob.phase == 1) {
-				subsurfaceScanner.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
+				subsurfaceScanner.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
 				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
-					subsurfaceScanner.finalizeFindings(lastResult);
+					subsurfaceScanner.finalizeFindings(activeResult);
 					activeJob.phase = 2;
 					activeJob.phaseCursor = 0;
 				}
@@ -165,11 +171,10 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 			}
 
 			if(activeJob.phase == 2) {
-				structuralAnalyzer.process(world, activeJob, lastResult, WORK_BUDGET_PER_TICK);
-				if(activeJob.phaseCursor >= structuralAnalyzer.getCandidateCount(lastResult)) {
-					lastResult.structuralSummary = structuralAnalyzer.finalizeSummary(lastResult);
+				structuralAnalyzer.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
+				if(activeJob.phaseCursor >= structuralAnalyzer.getCandidateCount(activeResult)) {
+					activeResult.structuralSummary = structuralAnalyzer.finalizeSummary(activeResult);
 					activeJob.processedWork = activeJob.totalWork;
-					onIntelligenceReady(lastResult);
 					finishOrFail(world);
 				}
 			}
@@ -181,17 +186,21 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	protected void onIntelligenceReady(IntelScanResult result) { }
 
 	private void finishOrFail(World world) {
-		if(lastResult.coveredColumns <= 0) {
+		if(activeResult == null || activeResult.coveredColumns <= 0) {
 			tx = "UNLOADED";
 			failScan("UNLOADED");
 			return;
 		}
-		onIntelligenceReady(lastResult);
+		onIntelligenceReady(activeResult);
 		completeScan(world);
 	}
 
 	protected void completeScan(World world) {
-		if(lastResult != null) lastResult.completedAt = world.getTotalWorldTime();
+		if(activeResult != null) {
+			activeResult.completedAt = world.getTotalWorldTime();
+			lastResult = activeResult;
+			activeResult = null;
+		}
 		if(activeJob != null) activeJob.state = IntelScanState.COMPLETE;
 		lastState = IntelScanState.COMPLETE;
 		tx = "COMPLETE";
@@ -206,6 +215,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		}
 		lastState = IntelScanState.ERROR;
 		activeJob = null;
+		activeResult = null;
 		markDirty();
 	}
 
@@ -236,6 +246,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		}
 		if(nbt.hasKey("intelLastResult")) lastResult = IntelScanResult.readFromNBT(nbt.getCompoundTag("intelLastResult"));
 		activeJob = null;
+		activeResult = null;
 		if(lastState == IntelScanState.SCANNING) lastState = lastResult == null ? IntelScanState.IDLE : IntelScanState.COMPLETE;
 	}
 }
