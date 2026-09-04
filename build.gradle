@@ -111,7 +111,7 @@ dependencies {
 
 	compileOnly("inventorytweaks:InventoryTweaks:1.59-dev:deobf") { transitive = false }
 
-	compileOnly("com.github.MightyPirates:OpenComputers:1.7.10-forge~1.8.9:api") { transitive = false }
+	compileOnly("curse.maven:opencomputers-223008:6608364") { transitive = false }
 
 	compileOnly("com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta.56-GTNH:dev") { transitive = false }
 }
@@ -125,9 +125,8 @@ processResources {
 	from(sourceSets.main.resources.srcDirs) {
 		include 'mcmod.info'
 
-		// replace version and mcversion
+		// replace version, mcversion and credits
 		filesMatching('mcmod.info') {
-			// replace version, mcversion and credits
 			expand([
 					version: version_name,
 					credits: project.credits
