@@ -1,7 +1,13 @@
-name: SATCOM branch CI
+name: PROD
+run-name: PROD
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/oc-satcom-relay
+    paths:
+      - .github/PROD_TRIGGER
 
 jobs:
   build:
@@ -23,15 +29,15 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: satcom-build-${{ github.run_number }}
+          name: PROD
           path: build/libs/*.jar
           if-no-files-found: error
 
       - name: Publish prerelease
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: satcom-build-${{ github.run_number }}
-          name: SATCOM Build ${{ github.run_number }}
+          tag_name: PROD-${{ github.run_number }}
+          name: PROD
           target_commitish: ${{ github.sha }}
           prerelease: true
           generate_release_notes: true
