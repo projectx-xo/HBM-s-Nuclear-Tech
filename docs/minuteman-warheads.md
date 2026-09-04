@@ -25,6 +25,12 @@ For example: soil → several 100-rated roof blocks → interior air penetrates 
 
 The older bunker-buster parts retain their existing behavior. The earlier Minuteman size 15/20 skin remains a separate part and takes size 15 heads.
 
+## Artwork alignment
+
+Both Minuteman fuselages and the size 20 head use dedicated UV mappings that align the lettering, star insignia, shield, and head flags with each side's centerline. The existing PNG artwork is retained. The models add subdivisions to position the markings accurately without changing the parts' shapes or dimensions. The size 15/20 correction applies only to the Minuteman variant.
+
+The corrected models must be installed with the textures; the earlier texture-only resource pack does not contain this alignment correction.
+
 ## Installation and verification
 
 These are new registered parts and gameplay code, so they require the updated mod JAR on both the client and server. A resource pack alone cannot add them. Replace the previous HBM JAR with the supplied build rather than loading two copies. Existing fork dependencies are unchanged.
