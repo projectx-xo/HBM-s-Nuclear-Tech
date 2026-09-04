@@ -3,9 +3,16 @@ package com.hbm.tileentity.machine;
 import com.hbm.handler.CompatHandler;
 import com.hbm.saveddata.SatelliteSavedData;
 import com.hbm.saveddata.satellites.SatelliteBase;
+import com.hbm.saveddata.satellites.SatelliteCombinedIntel;
+import com.hbm.saveddata.satellites.SatelliteIntelligenceBase;
 import com.hbm.saveddata.satellites.SatelliteRayScan;
 import com.hbm.saveddata.satellites.SatelliteRayScan.RayEvent;
 import com.hbm.saveddata.satellites.SatelliteRelay;
+import com.hbm.saveddata.satellites.intel.IntelFinding;
+import com.hbm.saveddata.satellites.intel.IntelScanResult;
+import com.hbm.saveddata.satellites.intel.IntelStructuralCell;
+import com.hbm.saveddata.satellites.intel.IntelStructuralSummary;
+import com.hbm.saveddata.satellites.intel.IntelSurfaceCell;
 import com.hbm.tileentity.TileEntityTickingBase;
 
 import api.hbm.redstoneoverradio.IRORInteractive;
@@ -37,11 +44,6 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	private static final int MAX_PAYLOAD_VALUES = 16;
 	private static final Set<TileEntityMachineSatLink> LOADED_STATIONS = ConcurrentHashMap.newKeySet();
 
-	/*
-	 * Keep OC runtime objects as Object references so this tile still follows the
-	 * existing optional-OpenComputers class-loading pattern. All casts to Context
-	 * live inside @Optional.Method methods.
-	 */
 	private final Map<String, Object> satcomContexts = new ConcurrentHashMap<String, Object>();
 	private final Map<String, Set<Integer>> satcomPorts = new ConcurrentHashMap<String, Set<Integer>>();
 
@@ -138,6 +140,12 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		if(worldObj == null || worldObj.isRemote || !connected) return false;
 		SatelliteBase sat = SatelliteSavedData.getData(worldObj).getSatFromFreq(freq);
 		return sat instanceof SatelliteRelay;
+	}
+
+	private SatelliteIntelligenceBase getIntelligenceSatellite() {
+		if(worldObj == null || worldObj.isRemote || !connected) return null;
+		SatelliteBase sat = SatelliteSavedData.getData(worldObj).getSatFromFreq(freq);
+		return sat instanceof SatelliteIntelligenceBase ? (SatelliteIntelligenceBase) sat : null;
 	}
 
 	private boolean isSameSatcomNetwork(TileEntityMachineSatLink other) {
@@ -404,6 +412,34 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return false;
 	}
 
+	private IntelScanResult intelResult() {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		return sat == null ? null : sat.getLastResult();
+	}
+
+	private String encodeSurfacePage(java.util.List<IntelSurfaceCell> cells, int start, int end) {
+		StringBuilder out = new StringBuilder();
+		for(int i = start; i < end; i++) {
+			IntelSurfaceCell cell = cells.get(i);
+			if(out.length() > 0) out.append('|');
+			out.append(cell.x).append(',').append(cell.y).append(',').append(cell.z).append(',')
+					.append(cell.classification.name()).append(',').append(cell.structural ? '1' : '0');
+		}
+		return out.toString();
+	}
+
+	private String encodeStructuralPage(java.util.List<IntelStructuralCell> cells, int start, int end) {
+		StringBuilder out = new StringBuilder();
+		for(int i = start; i < end; i++) {
+			IntelStructuralCell cell = cells.get(i);
+			if(out.length() > 0) out.append('|');
+			out.append(cell.x).append(',').append(cell.y).append(',').append(cell.z).append(',')
+					.append(cell.registryId.replace('|', '_').replace(',', '_')).append(',')
+					.append(cell.metadata).append(',').append(cell.blastResistance).append(',').append(cell.resistanceBand.name());
+		}
+		return out.toString();
+	}
+
 	// yay opencomputer stuff
 	@Override
 	@Optional.Method(modid = "OpenComputers")
@@ -440,7 +476,6 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	@Callback(direct = true, limit = 4, doc = "function(command: string) -- Transmits a command to the satellite")
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] send(Context context, Arguments args) {
-		// would be easier to just trick it into thinking it ran a RoR function
 		runRORFunction(PREFIX_FUNCTION + "tx", new String[]{args.checkString(0)});
 		return new Object[] {};
 	}
@@ -522,6 +557,117 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return new Object[] { broadcastSatcom(context, port, payload) };
 	}
 
+	@Callback(direct = true, limit = 4, doc = "function(x:number,z:number):boolean,string -- Sets intelligence target")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelSetTarget(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		if(sat == null) return new Object[] { false, "UNSUPPORTED" };
+		sat.setTarget(args.checkInteger(0), args.checkInteger(1));
+		sat.markDirty();
+		SatelliteSavedData.getData(worldObj).markDirty();
+		return new Object[] { true, "OK" };
+	}
+
+	@Callback(direct = true, limit = 4, doc = "function():boolean,string -- Starts intelligence scan")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelStartScan(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		if(sat == null) return new Object[] { false, "UNSUPPORTED" };
+		boolean started = sat.startScan(worldObj);
+		SatelliteSavedData.getData(worldObj).markDirty();
+		return new Object[] { started, started ? "STARTED" : "BUSY" };
+	}
+
+	@Callback(direct = true, doc = "function():string,number,number,number -- Gets intelligence scan status")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelStatus(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		if(sat == null) return new Object[] { "UNSUPPORTED", 0, 0, 0 };
+		String[] parts = sat.getScanStatus().split(";");
+		String state = parts.length > 0 ? parts[0] : "IDLE";
+		int done = sat.activeJob == null ? 0 : sat.activeJob.processedWork;
+		int total = sat.activeJob == null ? 0 : sat.activeJob.totalWork;
+		IntelScanResult result = sat.getLastResult();
+		int coverage = result == null ? 0 : result.getCoveragePercent();
+		return new Object[] { state, done, total, coverage };
+	}
+
+	@Callback(direct = true, doc = "function():string -- Gets latest intelligence summary")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelSummary(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		return new Object[] { sat == null ? "UNSUPPORTED" : sat.getScanSummary() };
+	}
+
+	@Callback(direct = true, doc = "function():number -- Gets intelligence finding count")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelFindingCount(Context context, Arguments args) {
+		IntelScanResult result = intelResult();
+		return new Object[] { result == null ? 0 : result.findings.size() };
+	}
+
+	@Callback(direct = true, doc = "function(index:number):... -- Gets one 1-based intelligence finding")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelGetFinding(Context context, Arguments args) {
+		IntelScanResult result = intelResult();
+		int index = args.checkInteger(0) - 1;
+		if(result == null || index < 0 || index >= result.findings.size()) return new Object[] { false, "OUT_OF_RANGE" };
+		IntelFinding f = result.findings.get(index);
+		return new Object[] { true, f.classification.name(), f.confidence,
+				f.minX, f.minY, f.minZ, f.maxX, f.maxY, f.maxZ,
+				f.reinforced, f.machinery, f.power, f.launchInfrastructure, f.communications };
+	}
+
+	@Callback(direct = true, doc = "function(page:number):boolean,number,string -- Gets 64-cell surface page")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelSurfacePage(Context context, Arguments args) {
+		IntelScanResult result = intelResult();
+		int page = args.checkInteger(0);
+		if(result == null || page < 1) return new Object[] { false, "OUT_OF_RANGE" };
+		int start = (page - 1) * IntelScanResult.PAGE_SIZE;
+		if(start >= result.surfaceCells.size()) return new Object[] { false, "OUT_OF_RANGE" };
+		int end = Math.min(result.surfaceCells.size(), start + IntelScanResult.PAGE_SIZE);
+		return new Object[] { true, end - start, encodeSurfacePage(result.surfaceCells, start, end) };
+	}
+
+	@Callback(direct = true, doc = "function(page:number):boolean,number,string -- Gets 64-cell subsurface page")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelSubsurfacePage(Context context, Arguments args) {
+		IntelScanResult result = intelResult();
+		int page = args.checkInteger(0);
+		if(result == null || page < 1) return new Object[] { false, "OUT_OF_RANGE" };
+		int start = (page - 1) * IntelScanResult.PAGE_SIZE;
+		if(start >= result.subsurfaceCells.size()) return new Object[] { false, "OUT_OF_RANGE" };
+		int end = Math.min(result.subsurfaceCells.size(), start + IntelScanResult.PAGE_SIZE);
+		return new Object[] { true, end - start, encodeSurfacePage(result.subsurfaceCells, start, end) };
+	}
+
+	@Callback(direct = true, doc = "function(page:number):boolean,number,string -- Gets Combined structural page")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelStructuralPage(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		if(!(sat instanceof SatelliteCombinedIntel)) return new Object[] { false, "UNSUPPORTED" };
+		IntelScanResult result = sat.getLastResult();
+		int page = args.checkInteger(0);
+		if(result == null || page < 1) return new Object[] { false, "OUT_OF_RANGE" };
+		int start = (page - 1) * IntelScanResult.PAGE_SIZE;
+		if(start >= result.structuralCells.size()) return new Object[] { false, "OUT_OF_RANGE" };
+		int end = Math.min(result.structuralCells.size(), start + IntelScanResult.PAGE_SIZE);
+		return new Object[] { true, end - start, encodeStructuralPage(result.structuralCells, start, end) };
+	}
+
+	@Callback(direct = true, doc = "function():... -- Gets Combined structural summary")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelStructuralSummary(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		if(!(sat instanceof SatelliteCombinedIntel)) return new Object[] { false, "UNSUPPORTED" };
+		IntelScanResult result = sat.getLastResult();
+		if(result == null || result.structuralSummary == null) return new Object[] { false, "NO_DATA" };
+		IntelStructuralSummary s = result.structuralSummary;
+		return new Object[] { true, s.dominantMaterial, s.averageResistance, s.maxResistance,
+				s.wallThickness, s.roofThickness, s.floorThickness, s.weakPointCount };
+	}
+
 	@Override
 	@Optional.Method(modid = "OpenComputers")
 	public String[] methods() {
@@ -539,7 +685,17 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 			"closeAll",
 			"isOpen",
 			"sendPacket",
-			"broadcast"
+			"broadcast",
+			"intelSetTarget",
+			"intelStartScan",
+			"intelStatus",
+			"intelSummary",
+			"intelFindingCount",
+			"intelGetFinding",
+			"intelSurfacePage",
+			"intelSubsurfacePage",
+			"intelStructuralPage",
+			"intelStructuralSummary"
 		};
 	}
 
@@ -547,34 +703,30 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] invoke(String method, Context context, Arguments args) throws Exception {
 		switch(method) {
-			case ("isConnected"):
-				return isConnected(context, args);
-			case ("setFreq"):
-				return setFreq(context, args);
-			case ("getFreq"):
-				return getFreq(context, args);
-			case ("getType"):
-				return getType(context, args);
-			case ("send"):
-				return send(context, args);
-			case ("read"):
-				return read(context, args);
-			case ("getSatelliteStatus"):
-				return getSatelliteStatus(context, args);
-			case ("getAddress"):
-				return getAddress(context, args);
-			case ("open"):
-				return open(context, args);
-			case ("close"):
-				return close(context, args);
-			case ("closeAll"):
-				return closeAll(context, args);
-			case ("isOpen"):
-				return isOpen(context, args);
-			case ("sendPacket"):
-				return sendPacket(context, args);
-			case ("broadcast"):
-				return broadcast(context, args);
+			case ("isConnected"): return isConnected(context, args);
+			case ("setFreq"): return setFreq(context, args);
+			case ("getFreq"): return getFreq(context, args);
+			case ("getType"): return getType(context, args);
+			case ("send"): return send(context, args);
+			case ("read"): return read(context, args);
+			case ("getSatelliteStatus"): return getSatelliteStatus(context, args);
+			case ("getAddress"): return getAddress(context, args);
+			case ("open"): return open(context, args);
+			case ("close"): return close(context, args);
+			case ("closeAll"): return closeAll(context, args);
+			case ("isOpen"): return isOpen(context, args);
+			case ("sendPacket"): return sendPacket(context, args);
+			case ("broadcast"): return broadcast(context, args);
+			case ("intelSetTarget"): return intelSetTarget(context, args);
+			case ("intelStartScan"): return intelStartScan(context, args);
+			case ("intelStatus"): return intelStatus(context, args);
+			case ("intelSummary"): return intelSummary(context, args);
+			case ("intelFindingCount"): return intelFindingCount(context, args);
+			case ("intelGetFinding"): return intelGetFinding(context, args);
+			case ("intelSurfacePage"): return intelSurfacePage(context, args);
+			case ("intelSubsurfacePage"): return intelSubsurfacePage(context, args);
+			case ("intelStructuralPage"): return intelStructuralPage(context, args);
+			case ("intelStructuralSummary"): return intelStructuralSummary(context, args);
 		}
 		throw new NoSuchMethodException();
 	}
