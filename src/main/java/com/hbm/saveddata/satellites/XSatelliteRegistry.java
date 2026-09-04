@@ -32,6 +32,9 @@ public class XSatelliteRegistry {
 		idToClass.put(10, SatelliteDetector.class);
 		idToClass.put(11, SatelliteRayScan.class);
 		idToClass.put(12, SatelliteScience.class);
+		idToClass.put(13, SatelliteSurfaceRecon.class);
+		idToClass.put(14, SatelliteSubsurfaceIntel.class);
+		idToClass.put(15, SatelliteCombinedIntel.class);
 
 		// item to sat type mapping
 		registerSatellite(SatelliteMapper.class,			new ComparableStack(ModItems.satellite, 1, EnumSatType.SPY));
@@ -47,6 +50,9 @@ public class XSatelliteRegistry {
 		registerSatellite(SatelliteDetector.class,			new ComparableStack(ModItems.satellite, 1, EnumSatType.DETECTOR));
 		registerSatellite(SatelliteRayScan.class,			new ComparableStack(ModItems.satellite, 1, EnumSatType.RAY_SCAN));
 		registerSatellite(SatelliteScience.class,			new ComparableStack(ModItems.satellite, 1, EnumSatType.SCIENCE));
+		registerSatellite(SatelliteSurfaceRecon.class,		new ComparableStack(ModItems.satellite, 1, EnumSatType.SURFACE_RECON));
+		registerSatellite(SatelliteSubsurfaceIntel.class,	new ComparableStack(ModItems.satellite, 1, EnumSatType.SUBSURFACE_INTEL));
+		registerSatellite(SatelliteCombinedIntel.class,		new ComparableStack(ModItems.satellite, 1, EnumSatType.COMBINED_INTEL));
 		
 		// and all the legacy crap
 		registerSatellite(SatelliteMapper.class, ModItems.sat_mapper);
