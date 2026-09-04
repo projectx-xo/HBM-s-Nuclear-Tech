@@ -24,7 +24,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.IChatComponent;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -135,7 +135,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	}
 
 	private boolean hasActiveRelaySatellite() {
-		if(worldObj == null || worldObj.isRemote) return false;
+		if(worldObj == null || worldObj.isRemote || !connected) return false;
 		SatelliteBase sat = SatelliteSavedData.getData(worldObj).getSatFromFreq(freq);
 		return sat instanceof SatelliteRelay;
 	}
@@ -278,6 +278,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return null;
 	}
 
+	@Optional.Method(modid = "OpenComputers")
 	private static int checkedPort(Arguments args, int index) {
 		int port = args.checkInteger(index);
 		if(port < MIN_PORT || port > MAX_PORT) {
@@ -327,6 +328,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return ports;
 	}
 
+	@Optional.Method(modid = "OpenComputers")
 	private static Object[] extractPayload(Arguments args, int firstIndex) {
 		int count = args.count() - firstIndex;
 		if(count < 0) count = 0;
@@ -376,11 +378,12 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		if(senderAddress.isEmpty()) return 0;
 
 		int delivered = 0;
+		Set<String> attempted = new HashSet<String>();
 		for(TileEntityMachineSatLink station : new ArrayList<TileEntityMachineSatLink>(LOADED_STATIONS)) {
 			if(!isSameSatcomNetwork(station)) continue;
 			station.pruneContexts();
 			for(String receiverAddress : new ArrayList<String>(station.satcomContexts.keySet())) {
-				if(senderAddress.equals(receiverAddress)) continue;
+				if(senderAddress.equals(receiverAddress) || !attempted.add(receiverAddress)) continue;
 				if(station.deliverTo(receiverAddress, senderAddress, port, payload)) delivered++;
 			}
 		}
@@ -418,6 +421,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] setFreq(Context context, Arguments args) {
 		freq = args.checkInteger(0);
+		this.markChanged();
 		return new Object[] {};
 	}
 
@@ -447,11 +451,11 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return new Object[] { provideRORValue(PREFIX_VALUE + "rx") };
 	}
 
-	@Callback(direct = true, doc = "function():boolean,string -- Returns whether the tuned satellite is an active relay and its type")
+	@Callback(direct = true, doc = "function():boolean,string -- Returns whether the tuned relay satellite is usable and its type")
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] getSatelliteStatus(Context context, Arguments args) {
 		SatelliteBase sat = worldObj == null ? null : SatelliteSavedData.getData(worldObj).getSatFromFreq(freq);
-		return new Object[] { sat instanceof SatelliteRelay, sat == null ? "" : sat.getType() };
+		return new Object[] { hasActiveRelaySatellite(), sat == null ? "" : sat.getType() };
 	}
 
 	@Callback(direct = true, doc = "function():string -- Returns this computer's SATCOM address")
