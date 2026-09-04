@@ -3495,6 +3495,7 @@ item.mp_fuselage_10_xenon_bhole.name=Size 10 Xenon Fuselage
 item.mp_fuselage_15_20_kerosene.name=Size 15/20 Kerosene Fuselage
 item.mp_fuselage_15_20_kerosene_magnusson.name=Size 15/20 Kerosene Fuselage
 item.mp_fuselage_15_20_solid.name=Size 15/20 Solid Fuel Fuselage
+item.mp_fuselage_15_20_solid_minuteman.name=Size 15/20 Solid Fuel Fuselage
 item.mp_fuselage_15_balefire.name=Size 15 BF Fuselage
 item.mp_fuselage_15_hydrogen.name=Size 15 Hydrogen Fuselage
 item.mp_fuselage_15_hydrogen_cathedral.name=Size 15 Hydrogen Fuselage
