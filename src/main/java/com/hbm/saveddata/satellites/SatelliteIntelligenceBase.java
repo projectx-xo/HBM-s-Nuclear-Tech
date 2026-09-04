@@ -221,7 +221,8 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
-		super.writeToNBT(nbt);
+		// SatelliteBase's persistence methods are inverted on this branch. Do not call
+		// super here: its writeToNBT reads from the outgoing tag and mutates this object.
 		nbt.setInteger("intelTargetX", targetX);
 		nbt.setInteger("intelTargetZ", targetZ);
 		nbt.setString("intelTx", tx == null ? "" : tx);
@@ -235,7 +236,9 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
-		super.readFromNBT(nbt);
+		// Likewise, do not call the inverted base readFromNBT, which writes defaults
+		// back into the tag being loaded. Intelligence satellites own their persisted
+		// target/status/result data under the intel* keys below.
 		targetX = nbt.getInteger("intelTargetX");
 		targetZ = nbt.getInteger("intelTargetZ");
 		tx = nbt.getString("intelTx");
