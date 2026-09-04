@@ -34,7 +34,7 @@ public class IntelSurfaceScanner {
 				y--;
 			}
 
-			IntelClassification classification = classifier.classifySurface(world, x, y, z);
+			IntelClassification classification = classifier.classifySurface(world, x, y, z).forMode(result.mode);
 			IntelBlockClassifier.BlockIntelProperties props = classifier.properties(world, x, y, z);
 			if(result.surfaceCells.size() < IntelScanResult.MAX_SURFACE_CELLS) {
 				result.surfaceCells.add(new IntelSurfaceCell(x, y, z, classification, props.constructed || props.machinery));
@@ -54,7 +54,7 @@ public class IntelSurfaceScanner {
 				existing.maxY = Math.max(existing.maxY, y);
 				existing.minZ = Math.min(existing.minZ, z);
 				existing.maxZ = Math.max(existing.maxZ, z);
-				mergeEvidence(existing, props);
+				mergeEvidence(existing, props, result.mode);
 				return;
 			}
 		}
@@ -65,15 +65,15 @@ public class IntelSurfaceScanner {
 		finding.minY = finding.maxY = y;
 		finding.minZ = finding.maxZ = z;
 		finding.confidence = props.machinery || props.launchInfrastructure ? 0.9F : props.reinforced ? 0.75F : 0.6F;
-		mergeEvidence(finding, props);
+		mergeEvidence(finding, props, result.mode);
 		result.findings.add(finding);
 	}
 
-	private void mergeEvidence(IntelFinding finding, IntelBlockClassifier.BlockIntelProperties props) {
+	private void mergeEvidence(IntelFinding finding, IntelBlockClassifier.BlockIntelProperties props, IntelScanMode mode) {
 		finding.reinforced |= props.reinforced;
 		finding.machinery |= props.machinery;
 		finding.power |= props.power;
-		finding.launchInfrastructure |= props.launchInfrastructure;
+		finding.launchInfrastructure |= mode == IntelScanMode.COMBINED && props.launchInfrastructure;
 		finding.communications |= props.communications;
 	}
 }

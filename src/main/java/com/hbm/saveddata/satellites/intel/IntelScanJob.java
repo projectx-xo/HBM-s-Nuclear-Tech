@@ -1,5 +1,9 @@
 package com.hbm.saveddata.satellites.intel;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 public class IntelScanJob {
 	public IntelScanMode mode;
 	public IntelScanState state = IntelScanState.SCANNING;
@@ -10,6 +14,7 @@ public class IntelScanJob {
 	public int totalWork;
 	public int missingColumns;
 	public String error = "";
+	public final Set<UUID> seenMissiles = new HashSet<UUID>();
 
 	public IntelScanJob(IntelScanMode mode) {
 		this.mode = mode;

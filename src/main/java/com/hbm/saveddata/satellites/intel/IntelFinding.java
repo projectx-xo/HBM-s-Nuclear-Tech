@@ -1,5 +1,7 @@
 package com.hbm.saveddata.satellites.intel;
 
+import java.util.UUID;
+
 import net.minecraft.nbt.NBTTagCompound;
 
 public class IntelFinding {
@@ -16,6 +18,11 @@ public class IntelFinding {
 	public boolean power;
 	public boolean launchInfrastructure;
 	public boolean communications;
+	public String targetType = "";
+	public String targetId = "";
+	public int targetCount;
+	// Only needed while scanning, to recognize entities moving between chunks.
+	public UUID sourceEntityId;
 
 	public NBTTagCompound writeToNBT() {
 		NBTTagCompound nbt = new NBTTagCompound();
@@ -32,6 +39,9 @@ public class IntelFinding {
 		nbt.setBoolean("power", power);
 		nbt.setBoolean("launch", launchInfrastructure);
 		nbt.setBoolean("communications", communications);
+		nbt.setString("targetType", targetType);
+		nbt.setString("targetId", targetId);
+		nbt.setInteger("targetCount", targetCount);
 		return nbt;
 	}
 
@@ -52,6 +62,9 @@ public class IntelFinding {
 		finding.power = nbt.getBoolean("power");
 		finding.launchInfrastructure = nbt.getBoolean("launch");
 		finding.communications = nbt.getBoolean("communications");
+		finding.targetType = nbt.getString("targetType");
+		finding.targetId = nbt.getString("targetId");
+		finding.targetCount = Math.max(0, nbt.getInteger("targetCount"));
 		return finding;
 	}
 }

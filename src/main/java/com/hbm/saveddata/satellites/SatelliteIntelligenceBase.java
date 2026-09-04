@@ -8,6 +8,8 @@ import com.hbm.saveddata.satellites.intel.IntelScanState;
 import com.hbm.saveddata.satellites.intel.IntelStructuralAnalyzer;
 import com.hbm.saveddata.satellites.intel.IntelSubsurfaceScanner;
 import com.hbm.saveddata.satellites.intel.IntelSurfaceScanner;
+import com.hbm.saveddata.satellites.intel.IntelTargetDetector;
+import com.hbm.saveddata.satellites.intel.IntelTargetScanner;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -28,6 +30,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	protected final IntelSurfaceScanner surfaceScanner = new IntelSurfaceScanner(intelClassifier);
 	protected final IntelSubsurfaceScanner subsurfaceScanner = new IntelSubsurfaceScanner(intelClassifier);
 	protected final IntelStructuralAnalyzer structuralAnalyzer = new IntelStructuralAnalyzer(intelClassifier);
+	protected final IntelTargetScanner targetScanner = new IntelTargetScanner();
 
 	public IntelScanJob activeJob;
 	public IntelScanResult activeResult;
@@ -61,6 +64,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		result.dimension = world.provider.dimensionId;
 		result.startedAt = world.getTotalWorldTime();
 		result.totalColumns = SCAN_SIZE * SCAN_SIZE;
+		if(result.mode == IntelScanMode.COMBINED) activeJob.totalWork += targetScanner.getChunkCount(result);
 		activeResult = result;
 		markDirty();
 		return true;
@@ -174,6 +178,15 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 				structuralAnalyzer.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
 				if(activeJob.phaseCursor >= structuralAnalyzer.getCandidateCount(activeResult)) {
 					activeResult.structuralSummary = structuralAnalyzer.finalizeSummary(activeResult);
+					activeJob.phase = 3;
+					activeJob.phaseCursor = 0;
+				}
+				return;
+			}
+
+			if(activeJob.phase == 3) {
+				targetScanner.process(new IntelTargetDetector(world), activeJob, activeResult, 1);
+				if(activeJob.phaseCursor >= targetScanner.getChunkCount(activeResult)) {
 					activeJob.processedWork = activeJob.totalWork;
 					finishOrFail(world);
 				}

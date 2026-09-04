@@ -46,7 +46,7 @@ public class IntelSubsurfaceScanner {
 				}
 				IntelBlockClassifier.BlockIntelProperties props = classifier.properties(world, x, y, z);
 				if(props.reinforced || props.machinery || props.power || props.communications || props.launchInfrastructure) {
-					IntelClassification classification = classifier.classifySubsurface(world, x, y, z);
+					IntelClassification classification = classifier.classifySubsurface(world, x, y, z).forMode(result.mode);
 					result.subsurfaceCells.add(new IntelSurfaceCell(x, y, z, classification, true));
 				}
 			}
@@ -113,14 +113,14 @@ public class IntelSubsurfaceScanner {
 			confidence = Math.max(0F, Math.min(1F, confidence));
 
 			IntelFinding finding = new IntelFinding();
-			finding.classification = classification;
+			finding.classification = classification.forMode(result.mode);
 			finding.minX = minX; finding.maxX = maxX;
 			finding.minY = minY; finding.maxY = maxY;
 			finding.minZ = minZ; finding.maxZ = maxZ;
 			finding.confidence = confidence;
 			finding.reinforced = reinforced;
 			finding.machinery = machinery;
-			finding.launchInfrastructure = launch;
+			finding.launchInfrastructure = result.mode == IntelScanMode.COMBINED && launch;
 			finding.power = power;
 			finding.communications = communications;
 			result.findings.add(finding);

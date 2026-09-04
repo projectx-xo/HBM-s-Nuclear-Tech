@@ -40,6 +40,18 @@ public class IntelScanResult {
 		builder.append(targetX).append(';').append(targetZ).append(';');
 		builder.append(getCoveragePercent()).append('%').append(';');
 		builder.append("FINDINGS=").append(findings.size());
+		if(mode == IntelScanMode.COMBINED) {
+			int missiles = 0, launchers = 0, silos = 0, radars = 0;
+			for(IntelFinding finding : findings) {
+				if(finding.classification == IntelClassification.MISSILE) missiles += finding.targetCount;
+				if(finding.classification == IntelClassification.SILO_HATCH) silos += finding.targetCount;
+				if(finding.classification == IntelClassification.RADAR) radars += finding.targetCount;
+				if("LAUNCHPAD".equals(finding.targetType) || "LAUNCH_TABLE".equals(finding.targetType)
+						|| "COMPACT_LAUNCHER".equals(finding.targetType)) launchers += finding.targetCount;
+			}
+			builder.append(";MISSILES=").append(missiles).append(";LAUNCHERS=").append(launchers)
+					.append(";SILO_HATCHES=").append(silos).append(";RADARS=").append(radars);
+		}
 		if(structuralSummary != null) {
 			builder.append(";MATERIAL=").append(structuralSummary.dominantMaterial);
 			builder.append(";AVG_RES=").append(String.format(java.util.Locale.US, "%.2f", structuralSummary.averageResistance));

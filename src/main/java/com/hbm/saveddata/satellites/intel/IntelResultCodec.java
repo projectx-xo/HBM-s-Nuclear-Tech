@@ -73,6 +73,18 @@ public final class IntelResultCodec {
 		for(int i = 0; i < Math.min(structural.tagCount(), IntelScanResult.MAX_STRUCTURAL_CELLS); i++) result.structuralCells.add(IntelStructuralCell.readFromNBT(structural.getCompoundTagAt(i)));
 
 		if(nbt.hasKey("structuralSummary")) result.structuralSummary = IntelStructuralSummary.readFromNBT(nbt.getCompoundTag("structuralSummary"));
+		if(result.mode != IntelScanMode.COMBINED) {
+			// Older scans could label launch hardware in the general terrain passes.
+			for(IntelFinding finding : result.findings) {
+				finding.classification = finding.classification.forMode(result.mode);
+				finding.launchInfrastructure = false;
+				finding.targetType = "";
+				finding.targetId = "";
+				finding.targetCount = 0;
+			}
+			for(IntelSurfaceCell cell : result.surfaceCells) cell.classification = cell.classification.forMode(result.mode);
+			for(IntelSurfaceCell cell : result.subsurfaceCells) cell.classification = cell.classification.forMode(result.mode);
+		}
 		return result;
 	}
 }

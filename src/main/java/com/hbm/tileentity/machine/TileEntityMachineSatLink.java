@@ -10,6 +10,7 @@ import com.hbm.saveddata.satellites.SatelliteRayScan.RayEvent;
 import com.hbm.saveddata.satellites.SatelliteRelay;
 import com.hbm.saveddata.satellites.intel.IntelFinding;
 import com.hbm.saveddata.satellites.intel.IntelScanResult;
+import com.hbm.saveddata.satellites.intel.IntelScanMode;
 import com.hbm.saveddata.satellites.intel.IntelStructuralCell;
 import com.hbm.saveddata.satellites.intel.IntelStructuralSummary;
 import com.hbm.saveddata.satellites.intel.IntelSurfaceCell;
@@ -613,9 +614,11 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		int index = args.checkInteger(0) - 1;
 		if(result == null || index < 0 || index >= result.findings.size()) return new Object[] { false, "OUT_OF_RANGE" };
 		IntelFinding f = result.findings.get(index);
-		return new Object[] { true, f.classification.name(), f.confidence,
+		boolean combined = result.mode == IntelScanMode.COMBINED;
+		return new Object[] { true, f.classification.forMode(result.mode).name(), f.confidence,
 				f.minX, f.minY, f.minZ, f.maxX, f.maxY, f.maxZ,
-				f.reinforced, f.machinery, f.power, f.launchInfrastructure, f.communications };
+				f.reinforced, f.machinery, f.power, combined && f.launchInfrastructure, f.communications,
+				combined ? f.targetType : "", combined ? f.targetId : "", combined ? f.targetCount : 0 };
 	}
 
 	@Callback(direct = true, doc = "function(page:number):boolean,number,string -- Gets 64-cell surface page")
