@@ -73,7 +73,7 @@ Each satellite maintains a scan job with:
 
 A bounded number of columns or sample cells is processed per server tick. Constants should control work budget so performance can be tuned after real server profiling.
 
-Only one active scan per satellite frequency is required for the first version. Starting a new scan while one is active should fail cleanly or explicitly replace/cancel the old scan; the preferred initial behavior is to reject with `BUSY`.
+Only one active scan per satellite frequency is required for the first version. Starting a new scan while one is active should reject with `BUSY`.
 
 ## Cached intelligence
 Completed intelligence products are cached in the satellite instance and persisted through `SatelliteSavedData`/satellite NBT.
@@ -196,6 +196,7 @@ The combined result contains:
 - subsurface geometry/findings.
 - fused site summary.
 - correlated markers.
+- structural material/strength analysis for detected constructed or reinforced geometry.
 
 Example correlations:
 
@@ -203,19 +204,74 @@ Example correlations:
 - exposed radar/antenna above a machinery bunker may produce a `COMMUNICATIONS` marker.
 - surface power equipment correlated with underground machinery may strengthen a `POWER` facility classification.
 
+### Structural engineering intelligence
+Only the Combined Intelligence Satellite performs exact structural-material analysis.
+
+For relevant constructed/reinforced cells, the scanner may retain the exact block registry identity and metadata internally and derive the block's effective blast resistance using the HBM/Minecraft block implementation available at scan time.
+
+The stored structural cell model should include, where available:
+
+- block registry ID.
+- block metadata.
+- effective blast resistance as a floating-point value.
+- coarse material/role classification.
+- world position or downsampled cell position.
+
+The OC-facing API should not require thousands of one-block calls. Structural data must be available through bounded pages/slices suitable for CENTCOM and hologram rendering.
+
+The Combined result should derive facility-level structural metrics including:
+
+- dominant shell material(s).
+- average shell blast resistance.
+- maximum shell blast resistance.
+- estimated wall thickness.
+- estimated roof thickness.
+- estimated floor thickness where detected.
+- weak-point regions where local resistance/thickness is materially lower than the surrounding shell.
+- resistance-band visualization cells.
+
+Example report:
+
+```
+FACILITY: BUNKER-01
+OUTER SHELL
+  dominant material: Red Concrete
+  blast resistance: 84.0
+  thickness estimate: 3-5 blocks
+
+STRUCTURAL ASSESSMENT
+  average shell resistance: 79.2
+  maximum resistance: 120.0
+  weakest sector: NORTHWEST WALL
+  penetration difficulty: HIGH
+```
+
+The exact raw block identity/blast-resistance capability is intentionally exclusive to `COMBINED_INTEL`. `SUBSURFACE_INTEL` continues to report classifications such as `REINFORCED_STRUCTURE` and confidence values without exposing exact hidden block identities.
+
+Recommended resistance bands for visualization are initially:
+
+- `< 10`: light.
+- `10 .. < 40`: hardened.
+- `40 .. < 100`: heavy.
+- `100 .. < 500`: extreme.
+- `>= 500`: strategic.
+
+These bands are presentation/classification defaults, not changes to HBM explosion physics.
+
 ## Scan commands
 New intelligence satellites support satellite commands conceptually equivalent to:
 
-- `target <x> <z>` -- set the target center using the existing targeting mechanism where possible.
+- `settarget <x> <z>` -- use the existing `SatelliteBase` target command.
 - `scan` -- start the satellite's supported scan.
 - `status` -- return idle/scanning/complete/error plus progress.
 - `summary` -- return a compact textual summary of the newest completed scan.
 - `surface` -- return/prepare surface intelligence data when supported.
 - `subsurface` -- return/prepare subsurface intelligence data when supported.
+- `structure` -- Combined-only structural analysis summary/data selector.
 
 Exact command transport should follow existing `SatelliteBase.onCommand` patterns.
 
-The first implementation should avoid returning enormous data blobs in one string. Large visualization data should be exposed through a paged/chunked data API or through dedicated OpenComputers callbacks added to the Satellite Ground Station.
+The first implementation should avoid returning enormous data blobs in one string. Large visualization/structural data should be exposed through a paged/chunked data API or through dedicated OpenComputers callbacks added to the Satellite Ground Station.
 
 ## OpenComputers / Satellite Ground Station integration
 The Satellite Ground Station is the ground interface for intelligence retrieval.
@@ -231,8 +287,9 @@ Recommended additions to `ntm_satlink` include concepts such as:
 - get summary.
 - enumerate findings.
 - retrieve visualization slices/pages.
+- retrieve Combined structural analysis pages and facility-level structural metrics.
 
-Exact names will be finalized in the implementation plan after checking current callback naming and payload constraints.
+Exact names are finalized in the implementation plan.
 
 The implementation must preserve existing RoR and SATCOM functionality.
 
@@ -259,6 +316,7 @@ CENTCOM can render:
 - surface terrain/structures as the primary layer.
 - underground cavities/facility shapes as a secondary layer.
 - threat/facility markers such as bunker, tunnel, possible silo, power, communications.
+- structural-strength mode using resistance bands for Combined-only scan data.
 
 Layer toggles and colors belong in the later OpenComputer-Scripts/CENTCOM implementation, not the HBM scan engine.
 
@@ -267,7 +325,7 @@ The source scan covers 64 x 64 blocks horizontally.
 
 The scan engine may internally reduce resolution to fit storage/performance needs. Visualization data must be bounded and suitable for OC/hologram transfer.
 
-The first version should prefer useful geometry over exact block fidelity.
+The first version should prefer useful geometry over exact block fidelity except for Combined structural cells, where exact source block identity/resistance may be retained before/downsampled during structural analysis.
 
 ## Chunk loading and coverage
 No intelligence satellite may force chunks to load in this version.
@@ -285,9 +343,9 @@ This is both a performance requirement and an intentional gameplay limitation.
 ## Persistence
 Satellite-specific scan state/results require serialization through each satellite's existing NBT persistence hooks.
 
-Persist completed results and necessary metadata.
+Persist completed results and necessary metadata, including Combined structural analysis pages/metrics subject to hard result-size limits.
 
-An in-progress scan does not have to resume perfectly after a server restart for the first implementation; it may safely reset to idle while retaining the most recent completed result. If straightforward, persisting resumable cursors is allowed but not required.
+An in-progress scan does not have to resume perfectly after a server restart for the first implementation; it may safely reset to idle while retaining the most recent completed result.
 
 ## Performance safeguards
 The implementation must include hard limits for:
@@ -296,10 +354,11 @@ The implementation must include hard limits for:
 - per-tick work.
 - number of retained findings.
 - maximum visualization cells/voxels.
+- maximum structural-analysis cells.
 - maximum serialized result size.
 - OC data page/chunk size.
 
-The scanner should avoid repeated expensive tile-entity/block classification work where caching per-block-type classifications is practical.
+The scanner should avoid repeated expensive tile-entity/block classification and blast-resistance lookup work where caching per-block/meta classifications is practical.
 
 ## Extensibility
 Shared intelligence code should be separated from individual satellite classes so future satellites can reuse it.
@@ -310,6 +369,7 @@ Recommended conceptual structure:
 - surface scanner.
 - subsurface scanner.
 - feature classifier/analyzer.
+- structural material/blast-resistance analyzer.
 - intelligence result/data model.
 - serialization helpers.
 - satellite wrappers for Surface, Subsurface, Combined.
@@ -354,15 +414,17 @@ Implementation verification should cover:
 5. Subsurface scan detects a known bunker cavity and reinforced shell.
 6. Subsurface scan returns classifications/confidence rather than full hidden block inventory.
 7. Combined scan contains both result types and correlation markers.
-8. Unloaded chunks are not force-loaded and reduce coverage.
-9. Scan processing is spread over ticks.
-10. Completed results survive save/reload.
-11. Satellite Ground Station can query status/summary and retrieve bounded visualization data through OC.
-12. Existing SatelliteRelay/SATCOM functionality remains operational.
+8. Combined scan records the correct block registry identity/metadata and effective blast resistance for known structural test blocks, including an HBM block with a known resistance value.
+9. Combined scan derives shell averages/maxima/thickness/weak-point metrics from a controlled test bunker.
+10. Unloaded chunks are not force-loaded and reduce coverage.
+11. Scan processing is spread over ticks.
+12. Completed results survive save/reload.
+13. Satellite Ground Station can query status/summary and retrieve bounded visualization/structural data through OC.
+14. Existing SatelliteRelay/SATCOM functionality remains operational.
 
 ## Non-goals for first implementation
 - Literal screenshots or image files of the target.
-- Perfect block-for-block underground x-ray.
+- Perfect block-for-block underground x-ray from the Subsurface satellite.
 - Automatic target chunkloading.
 - Cross-dimension reconnaissance.
 - Automatic periodic scans/orbital pass simulation.
@@ -370,3 +432,4 @@ Implementation verification should cover:
 - Hologram rendering code in HBM itself.
 - CENTCOM UI implementation.
 - Satellite jamming/countermeasures.
+- Changing any block's actual HBM/Minecraft explosion resistance or explosion physics.
