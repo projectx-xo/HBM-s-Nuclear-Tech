@@ -22,6 +22,7 @@ public class IntelScanResult {
 	public long completedAt;
 	public int coveredColumns;
 	public int totalColumns = 4096;
+	public boolean correlated;
 	public final List<IntelFinding> findings = new ArrayList<IntelFinding>();
 	public final List<IntelSurfaceCell> surfaceCells = new ArrayList<IntelSurfaceCell>();
 	public final List<IntelSurfaceCell> subsurfaceCells = new ArrayList<IntelSurfaceCell>();
@@ -40,8 +41,12 @@ public class IntelScanResult {
 		builder.append(getCoveragePercent()).append('%').append(';');
 		builder.append("FINDINGS=").append(findings.size());
 		if(structuralSummary != null) {
+			builder.append(";MATERIAL=").append(structuralSummary.dominantMaterial);
 			builder.append(";AVG_RES=").append(String.format(java.util.Locale.US, "%.2f", structuralSummary.averageResistance));
 			builder.append(";MAX_RES=").append(String.format(java.util.Locale.US, "%.2f", structuralSummary.maxResistance));
+			builder.append(";WALL=").append(structuralSummary.wallThickness);
+			builder.append(";ROOF=").append(structuralSummary.roofThickness);
+			builder.append(";FLOOR=").append(structuralSummary.floorThickness);
 			builder.append(";WEAK=").append(structuralSummary.weakPointCount);
 		}
 		return builder.toString();
