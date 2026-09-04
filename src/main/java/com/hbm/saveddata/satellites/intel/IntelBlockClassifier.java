@@ -42,8 +42,10 @@ public class IntelBlockClassifier {
 			cache.put(key, base);
 		}
 		BlockIntelProperties props = new BlockIntelProperties(base);
-		TileEntity tile = world.getTileEntity(x, y, z);
-		if(tile != null) applyNameFlags(props, tile.getClass().getName().toLowerCase(Locale.US), true);
+		if(block != null && block.hasTileEntity(meta)) {
+			TileEntity tile = world.getTileEntity(x, y, z);
+			if(tile != null) applyNameFlags(props, tile.getClass().getName().toLowerCase(Locale.US), true);
+		}
 		return props;
 	}
 
@@ -51,29 +53,34 @@ public class IntelBlockClassifier {
 		BlockIntelProperties props = new BlockIntelProperties();
 		props.registryId = registryId;
 		props.metadata = meta;
-		props.materialCategory = block.getMaterial() == null ? "" : block.getMaterial().toString();
+		props.materialCategory = block == null || block.getMaterial() == null ? "" : block.getMaterial().toString();
 		props.effectiveBlastResistance = effectiveBlastResistance(block);
-		String names = (registryId + " " + block.getClass().getName()).toLowerCase(Locale.US);
-		props.constructed = registryId.startsWith("hbm:") || names.contains("concrete") || names.contains("brick") || names.contains("metal") || names.contains("machine");
-		props.reinforced = props.constructed && (props.effectiveBlastResistance >= 40F || names.contains("reinforced") || names.contains("bunker") || names.contains("concrete"));
+		String names = (registryId + " " + (block == null ? "" : block.getClass().getName())).toLowerCase(Locale.US);
+		props.constructed = containsAny(names, "concrete", "brick", "plating", "metal_block", "blockmetal", "machine", "vault", "bunker", "reinforced");
+		props.reinforced = props.constructed && (props.effectiveBlastResistance >= 40F || containsAny(names, "reinforced", "bunker", "concrete", "vault", "plating"));
 		applyNameFlags(props, names, false);
 		return props;
 	}
 
 	private void applyNameFlags(BlockIntelProperties props, String names, boolean tileEntity) {
-		if(tileEntity || names.contains("machine") || names.contains("tileentity")) props.machinery = true;
+		if(tileEntity || names.contains("machine") || names.contains("tileentity")) {
+			props.machinery = true;
+			props.constructed = true;
+		}
 		if(containsAny(names, "launch", "launcher", "missile", "silo", "launchpad")) {
 			props.launchInfrastructure = true;
 			props.machinery = true;
 			props.constructed = true;
 		}
-		if(containsAny(names, "radar", "satlink", "satellite", "radio", "antenna", "rtty", "comm")) {
+		if(containsAny(names, "radar", "satlink", "satellite", "radio", "antenna", "rtty", "communication")) {
 			props.communications = true;
 			props.machinery = true;
+			props.constructed = true;
 		}
 		if(containsAny(names, "reactor", "generator", "battery", "transformer", "capacitor", "power", "turbine", "substation")) {
 			props.power = true;
 			props.machinery = true;
+			props.constructed = true;
 		}
 	}
 
