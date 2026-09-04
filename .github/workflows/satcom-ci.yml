@@ -1,9 +1,6 @@
 name: SATCOM branch CI
 
 on:
-  push:
-    branches:
-      - feature/oc-satcom-relay
   workflow_dispatch:
 
 jobs:
