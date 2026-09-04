@@ -4,18 +4,38 @@ on:
   push:
     branches:
       - feature/oc-satcom-relay
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up JDK 8
         uses: actions/setup-java@v4
         with:
           java-version: '8'
           distribution: 'temurin'
+
       - name: Build
         run: ./gradlew build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: satcom-build-${{ github.run_number }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+      - name: Publish prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: satcom-build-${{ github.run_number }}
+          name: SATCOM Build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          generate_release_notes: true
+          files: build/libs/*.jar
