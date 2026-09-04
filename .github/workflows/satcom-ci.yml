@@ -1,5 +1,4 @@
-name: PROD
-run-name: PROD
+name: tjHBM-NTM PROD
 
 on:
   workflow_dispatch:
@@ -7,7 +6,7 @@ on:
     branches:
       - feature/oc-satcom-relay
     paths:
-      - .github/PROD_TRIGGER
+      - .github/PROD_VERSION
 
 jobs:
   build:
@@ -16,6 +15,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read PROD version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(tr -d '[:space:]' < .github/PROD_VERSION)"
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release=tjHBM-NTM-v$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK 8
         uses: actions/setup-java@v4
@@ -26,19 +34,26 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: Rename PROD JAR
+        shell: bash
+        run: |
+          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' | head -n 1)"
+          test -n "$JAR"
+          cp "$JAR" "build/libs/${{ steps.version.outputs.release }}.jar"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PROD
-          path: build/libs/*.jar
+          name: ${{ steps.version.outputs.release }}
+          path: build/libs/${{ steps.version.outputs.release }}.jar
           if-no-files-found: error
 
       - name: Publish prerelease
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: PROD-${{ github.run_number }}
-          name: PROD
+          tag_name: ${{ steps.version.outputs.release }}
+          name: ${{ steps.version.outputs.release }}
           target_commitish: ${{ github.sha }}
           prerelease: true
           generate_release_notes: true
-          files: build/libs/*.jar
+          files: build/libs/${{ steps.version.outputs.release }}.jar
