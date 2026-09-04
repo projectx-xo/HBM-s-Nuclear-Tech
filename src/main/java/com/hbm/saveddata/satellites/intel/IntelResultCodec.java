@@ -19,6 +19,7 @@ public final class IntelResultCodec {
 		nbt.setLong("completedAt", result.completedAt);
 		nbt.setInteger("coveredColumns", result.coveredColumns);
 		nbt.setInteger("totalColumns", result.totalColumns);
+		nbt.setBoolean("correlated", result.correlated);
 
 		NBTTagList findings = new NBTTagList();
 		for(int i = 0; i < Math.min(result.findings.size(), IntelScanResult.MAX_FINDINGS); i++) findings.appendTag(result.findings.get(i).writeToNBT());
@@ -47,13 +48,17 @@ public final class IntelResultCodec {
 		} catch(Exception ignored) { }
 		result.targetX = nbt.getInteger("targetX");
 		result.targetZ = nbt.getInteger("targetZ");
-		result.width = Math.max(1, Math.min(64, nbt.getInteger("width")));
-		result.depth = Math.max(1, Math.min(64, nbt.getInteger("depth")));
+		int width = nbt.getInteger("width");
+		int depth = nbt.getInteger("depth");
+		result.width = Math.max(1, Math.min(64, width <= 0 ? 64 : width));
+		result.depth = Math.max(1, Math.min(64, depth <= 0 ? 64 : depth));
 		result.dimension = nbt.getInteger("dimension");
 		result.startedAt = nbt.getLong("startedAt");
 		result.completedAt = nbt.getLong("completedAt");
-		result.coveredColumns = Math.max(0, nbt.getInteger("coveredColumns"));
-		result.totalColumns = Math.max(1, nbt.getInteger("totalColumns"));
+		result.coveredColumns = Math.max(0, Math.min(4096, nbt.getInteger("coveredColumns")));
+		int total = nbt.getInteger("totalColumns");
+		result.totalColumns = Math.max(1, Math.min(4096, total <= 0 ? 4096 : total));
+		result.correlated = nbt.getBoolean("correlated");
 
 		NBTTagList findings = nbt.getTagList("findings", 10);
 		for(int i = 0; i < Math.min(findings.tagCount(), IntelScanResult.MAX_FINDINGS); i++) result.findings.add(IntelFinding.readFromNBT(findings.getCompoundTagAt(i)));
