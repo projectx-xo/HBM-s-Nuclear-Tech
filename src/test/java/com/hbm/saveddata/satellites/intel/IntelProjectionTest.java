@@ -7,6 +7,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.block.material.Material;
 import net.minecraft.world.IBlockAccess;
 import com.hbm.blocks.network.PowerCableBox;
+import com.hbm.blocks.generic.*;
+import net.minecraft.block.Block;
 
 public class IntelProjectionTest {
 
@@ -102,6 +104,22 @@ public class IntelProjectionTest {
 		p.set(7,20,8,255,false);
 		assertArrayEquals(new double[]{7,20,8,8,21,9},p.bounds(false),0);
 		assertEquals(201,p.bounds(true)[4],0);
+	}
+
+	@Test public void geologicalDepositsDoNotShiftTheBuildingOffTheTable() {
+		Block[] deposits={new BlockCluster(Material.rock),new BlockDepthOre(),new BlockResourceStone(),new BlockKeyhole(),new BlockBedrockOreTE()};
+		IntelProjection p=new IntelProjection(0,0,deposits.length+1,1);
+		for(int i=0;i<deposits.length;i++) {
+			assertTrue(deposits[i].getClass().getSimpleName(),IntelProjectionScanner.natural(deposits[i],0));
+			p.set(i+1,i+1,0,255,IntelProjectionScanner.natural(deposits[i],0));
+		}
+		for(int y=56;y<=82;y++) p.set(0,y,0,255,false);
+		assertArrayEquals(new double[]{0,56,0,1,83,1},p.bounds(false),0);
+		assertEquals(6,mesh(p,255,-1,0,false).size());
+		assertTrue(mesh(p,255,-1,0,true).size()>6);
+		assertEquals(255,p.mask(1,1,0)); // Terrain remains captured and can be shown.
+		assertFalse(IntelProjectionScanner.natural(new BlockRedBrickKeyhole(Material.rock),0));
+		assertFalse(IntelProjectionScanner.natural(new PowerCableBox(Material.iron),0));
 	}
 
 	@Test public void nativeReferencesCannotSelectAnotherScanOrSatelliteMode() {

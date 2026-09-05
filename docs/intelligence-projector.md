@@ -1,6 +1,6 @@
 # Intelligence Projection Table
 
-Introduced in **tjHBM-NTM-v1.8**. Install the same mod JAR on server and clients.
+Introduced in v1.8; use **tjHBM-NTM-v1.9** for continuous outlines and corrected HBM terrain filtering. Install the same mod JAR on server and clients. Run a fresh scan after updating so previously misclassified mineral deposits are recaptured as terrain.
 
 Place the one-block **Intelligence Projection Table** in the command room and connect an OpenComputers adapter to any side, then cable it to CENTRAL. The component name is `ntm_intel_projector`. The table is available in the missile creative tab and through the assembly machine (4 steel scaffolds, 8 aluminium plates, 2 magnetrons, 2 controller circuits).
 
@@ -48,7 +48,7 @@ Cyan faces/lines represent captured geometry. Glass is captured separately and r
 
 - Every block in loaded columns of the 64 × 64 footprint, Y=0..255, is captured in a separate bounded pass. This is independent of the older 8,192-cell structural sample limit.
 - Eight occupancy bits per block approximate geometry at half-block resolution. Vanilla slabs/stairs and verified local shapes use their bounds. Thin shapes are approximate; custom block models use their occupied block footprint. Animated tiles, inventories and entities are not rendered as live remote meshes. Missiles and launch equipment remain finding symbols.
-- Natural terrain is initially hidden. Stone, soil, ores, fluids and vegetation are filtered separately; enable terrain to inspect stone/earth construction. Tile-entity machinery is retained.
+- Natural terrain is initially hidden. Stone, soil, ores, HBM mineral clusters/resource stone, naturally generated keyhole stone, fluids and vegetation are filtered separately; enable terrain to inspect stone/earth construction. Tile-entity machinery is retained; the known bedrock ore tile is classified as terrain.
 - Missing chunks stay empty and are reported through geometry coverage. Shape capture avoids arbitrary cable/pipe connection callbacks that could load an absent multiblock core chunk. A scan is assembled over time, not an atomic world snapshot.
 - Each snapshot has a persisted UUID. The table selects by satellite frequency, dimension and exact UUID, rejects stale/non-combined references, and saves the displayed snapshot across reloads. Older scans require a new scan after updating.
 - Dense geometry travels through the mod, not OC modem pages. Compressed buffer packets use a 32-bit length rather than vanilla NBT's 32 KiB limit. Clients request a scene when needed; changing a view sends only controls.
@@ -68,6 +68,6 @@ The ground station's `intelProjection()` returns `true, frequency, dimension, sn
 
 ## Verification
 
-JUnit covers capture budgets, missing columns, odd Y levels, slab masks, rooms/openings, glass windows, clipping, terrain filtering, saved data, combined-only references, stale scene rejection and compressed transfers exceeding 32 KiB. All 44 Java tests pass. All nine STRATCOM test suites pass on Lua 5.2 and 5.3, including the runtime-to-viewer flow and CENTRAL's real modem/command routing for native and legacy devices.
+JUnit covers capture budgets, missing columns, odd Y levels, slab masks, rooms/openings, glass windows, clipping, terrain filtering, saved data, combined-only references, stale scene rejection and compressed transfers exceeding 32 KiB. A regression test checks that HBM geological deposits do not shift the building's fitted bounds, remain available with terrain enabled, and do not cause constructed blocks or machinery to be filtered. STRATCOM tests cover the runtime-to-viewer flow and CENTRAL's real modem/command routing for native and legacy devices on Lua 5.2 and 5.3.
 
-The development Minecraft client starts and enters a world without OpenComputers installed. In-world projection appearance remains unverified; the computer-use tool could not attach to the development client's Java window.
+The development Minecraft client starts and enters a world without OpenComputers installed. User-captured screenshots of the local fixture confirmed the native geometry transfer, exterior building/window rendering, three numbered finding markers, continuous outlines after the depth-offset adjustment, and the cutaway exposing floors and rooms. The saved scan identified the mineral deposits behind the terrain-filter regression. Live satellite-to-table operation on an OpenComputers server still needs in-game verification; the fixture loads a sample scan directly into the table.

@@ -58,7 +58,10 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			for(double a=minX;a<=maxX;a+=2) { vertex(a,minY-.15,minZ);vertex(a,minY-.15,maxZ); }
 			for(double a=minZ;a<=maxZ;a+=2) { vertex(minX,minY-.15,a);vertex(maxX,minY-.15,a); }GL11.glEnd();
 			// Depth prepass makes the exterior readable. Cutting geometry exposes the actual room surfaces.
+			// Keep the depth surface just behind its coplanar outlines so line rasterization does not produce broken edges.
+			GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(1F,1F);
 			GL11.glDepthMask(true);GL11.glColorMask(false,false,false,false);GL11.glCallList(cache.lists);
+			GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
 			GL11.glColorMask(true,true,true,true);GL11.glDepthMask(false);GL11.glDepthFunc(GL11.GL_LEQUAL);
 			GL11.glColor4f(.04F,.45F,.7F,.18F);GL11.glCallList(cache.lists);
 			GL11.glColor4f(.1F,.7F,1,.08F);GL11.glCallList(cache.lists+1);

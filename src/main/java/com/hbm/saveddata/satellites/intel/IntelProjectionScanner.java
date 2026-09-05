@@ -3,6 +3,11 @@ package com.hbm.saveddata.satellites.intel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import com.hbm.blocks.generic.BlockBedrockOreTE;
+import com.hbm.blocks.generic.BlockCluster;
+import com.hbm.blocks.generic.BlockDepthOre;
+import com.hbm.blocks.generic.BlockKeyhole;
+import com.hbm.blocks.generic.BlockResourceStone;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.init.Blocks;
@@ -53,7 +58,7 @@ public final class IntelProjectionScanner {
 					for(int dx=-2;dx<=2;dx+=2) for(int dz=-2;dz<=2;dz+=2) neighbors &= loaded(x+dx,z+dz);
 				}
 				int meta=world.getBlockMetadata(x,y,z);
-				return shape(b,world,x,y,z,neighbors) | (!b.hasTileEntity(meta) && natural(b)?256:0)
+				return shape(b,world,x,y,z,neighbors) | (natural(b,meta)?256:0)
 						| (b.getMaterial()==Material.glass?512:0);
 			}
 		};
@@ -81,7 +86,10 @@ public final class IntelProjectionScanner {
 					b.getBlockBoundsMaxX(),b.getBlockBoundsMaxY(),b.getBlockBoundsMaxZ());
 		} finally { b.setBlockBounds((float)a,(float)c,(float)d,(float)e,(float)f,(float)g); }
 	}
-	private static boolean natural(Block b) {
+	static boolean natural(Block b,int meta) {
+		if(b instanceof BlockBedrockOreTE) return true;
+		if(b.hasTileEntity(meta)) return false;
+		if(b instanceof BlockCluster || b instanceof BlockDepthOre || b instanceof BlockResourceStone || b instanceof BlockKeyhole) return true;
 		Material m=b.getMaterial();
 		if(m.isLiquid() || m==Material.leaves || m==Material.plants || m==Material.vine || m==Material.snow) return true;
 		if(b==Blocks.stone || b==Blocks.dirt || b==Blocks.grass || b==Blocks.sand || b==Blocks.gravel

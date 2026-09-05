@@ -49,4 +49,10 @@ Files in stratcom: `runtime/intel.lua`, `central/hologram.lua`, runtime manifest
 - [x] Generate an immutable STRATCOM release manifest, verify downloaded artifacts, wait for GitHub mod JAR release.
 - [x] Provide setup, rescan, exterior/interior commands and tested limitations. Do not claim in-game visual verification unless actually performed.
 
-Release verified: GitHub Actions run `33987543547` succeeded and published `tjHBM-NTM-v1.8` from `34979c4fc721b22972bce864fc2a4e41c117cd74`. STRATCOM 3.4.0 uses immutable manifest `8f71833f5cc8d8331abda474c8f3944eb46ed599`. In-game projection appearance remains a manual check; the computer-use tool could not attach to the development Java window.
+Release verified: GitHub Actions run `33987543547` succeeded and published `tjHBM-NTM-v1.8` from `34979c4fc721b22972bce864fc2a4e41c117cd74`. STRATCOM 3.4.0 uses immutable manifest `8f71833f5cc8d8331abda474c8f3944eb46ed599`. User-captured screenshots subsequently verified exterior outlines, windows, markers and the cutaway exposing floors and rooms. Live satellite-to-table operation still needs an in-game check with OpenComputers.
+
+### Follow-up: v1.9 visual corrections
+- [x] Confirm continuous coplanar outlines in the updated screenshots.
+- [x] Identify stray geometry from the saved scan: mineral clusters, resource stone and natural keyhole stone.
+- [x] Add a failing geological-deposit regression and fix terrain classification without hiding construction or machinery; all 45 Java tests pass.
+- [ ] Publish the v1.9 JAR and verify its downloadable contents.
