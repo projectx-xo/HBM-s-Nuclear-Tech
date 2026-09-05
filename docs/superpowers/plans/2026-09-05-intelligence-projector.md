@@ -45,6 +45,8 @@ Files in stratcom: `runtime/intel.lua`, `central/hologram.lua`, runtime manifest
 
 ### 4. Verify and publish
 - [x] Review changes against the design and rerun checks affected by fixes.
-- [ ] Version mod PROD as 1.8 and STRATCOM as 3.4.0, build and push existing feature branches.
-- [ ] Generate an immutable STRATCOM release manifest, verify downloaded artifacts, wait for GitHub mod JAR release.
-- [ ] Provide setup, rescan, exterior/interior commands and tested limitations. Do not claim in-game visual verification unless actually performed.
+- [x] Version mod PROD as 1.8 and STRATCOM as 3.4.0, build and push existing feature branches.
+- [x] Generate an immutable STRATCOM release manifest, verify downloaded artifacts, wait for GitHub mod JAR release.
+- [x] Provide setup, rescan, exterior/interior commands and tested limitations. Do not claim in-game visual verification unless actually performed.
+
+Release verified: GitHub Actions run `33987543547` succeeded and published `tjHBM-NTM-v1.8` from `34979c4fc721b22972bce864fc2a4e41c117cd74`. STRATCOM 3.4.0 uses immutable manifest `8f71833f5cc8d8331abda474c8f3944eb46ed599`. In-game projection appearance remains a manual check; the computer-use tool could not attach to the development Java window.
