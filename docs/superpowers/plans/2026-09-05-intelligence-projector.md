@@ -55,4 +55,4 @@ Release verified: GitHub Actions run `33987543547` succeeded and published `tjHB
 - [x] Confirm continuous coplanar outlines in the updated screenshots.
 - [x] Identify stray geometry from the saved scan: mineral clusters, resource stone and natural keyhole stone.
 - [x] Add a failing geological-deposit regression and fix terrain classification without hiding construction or machinery; all 45 Java tests pass.
-- [ ] Publish the v1.9 JAR and verify its downloadable contents.
+- [x] Publish the v1.9 JAR and verify its downloadable contents. GitHub Actions run `33988740454` succeeded for `080386b413521e5c269c7d85e53ed06de25e9164`; the downloaded archive matched GitHub SHA-256 `f5d6549526b6632003ec49765cadb1849e69973bda7d7648e088a381183ddad6`.
