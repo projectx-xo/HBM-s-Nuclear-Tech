@@ -423,7 +423,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	public Object[] intelProjection(Context context, Arguments args) {
 		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
 		IntelScanResult result = sat == null || sat.activeJob != null ? null : sat.getLastResult();
-		if(result == null || result.mode != com.hbm.saveddata.satellites.intel.IntelScanMode.COMBINED || result.projection == null)
+		if(result == null || result.mode != com.hbm.saveddata.satellites.intel.IntelScanMode.COMBINED || result.projection == null || !result.projection.hasBlockStates)
 			return new Object[] { false, "RESCAN_WITH_COMBINED_SATELLITE" };
 		return new Object[] { true, freq, result.dimension, result.projection.id };
 	}

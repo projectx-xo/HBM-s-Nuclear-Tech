@@ -54,6 +54,26 @@ public class IntelProjectionTest {
 		assertEquals(255, IntelProjectionScanner.mask(0, 0, 0, 1, 1, 1));
 	}
 
+	@Test public void blockTexturesAndMetadataSurviveSavingWithoutRegistryNumberDependencies() {
+		IntelProjection p=new IntelProjection(-32,16,3,1);
+		p.setBlock(0,5,0,"hbm:tile.concrete_colored_ext",6);
+		p.setBlock(1,5,0,"minecraft:stone_stairs",3);
+		p.setBlock(2,5,0,"hbm:tile.concrete_colored_ext",2);
+		assertEquals(2,p.blockPalette.size());
+		IntelProjection restored=IntelProjection.readFromNBT(p.writeToNBT());
+		assertTrue(restored.hasBlockStates);
+		assertEquals("hbm:tile.concrete_colored_ext",restored.blockName(0,5,0));
+		assertEquals(6,restored.metadata(0,5,0));
+		assertEquals("minecraft:stone_stairs",restored.blockName(1,5,0));
+		assertEquals(3,restored.metadata(1,5,0));
+		assertEquals(2,restored.metadata(2,5,0));
+		assertEquals("minecraft:air",restored.blockName(-1,5,0));
+		NBTTagCompound old=p.writeToNBT();old.removeTag("blockStates");old.removeTag("blockPalette");
+		assertFalse(IntelProjection.readFromNBT(old).hasBlockStates);
+		NBTTagCompound bad=p.writeToNBT();byte[] states=bad.getByteArray("blockStates");states[0]=(byte)255;
+		assertNull(IntelProjection.readFromNBT(bad));
+	}
+
 	@Test public void cableShapeNeverFollowsAProxyIntoItsUnloadedCoreChunk() {
 		PowerCableBox cable=new PowerCableBox(Material.iron) {
 			@Override public void setBlockBoundsBasedOnState(IBlockAccess world,int x,int y,int z) {

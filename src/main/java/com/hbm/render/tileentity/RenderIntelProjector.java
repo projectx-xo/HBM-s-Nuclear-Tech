@@ -7,21 +7,31 @@ import org.lwjgl.opengl.GL11;
 import com.hbm.saveddata.satellites.intel.*;
 import com.hbm.tileentity.machine.TileEntityIntelProjector;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GLAllocation;
+import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraftforge.client.event.TextureStitchEvent;
+import net.minecraftforge.common.MinecraftForge;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
+import java.nio.FloatBuffer;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.util.vector.Matrix4f;
 
 public class RenderIntelProjector extends TileEntitySpecialRenderer {
 	private static final class Cache {
 		String key;
-		IntelProjectionMesh.Builder builder;
-		int lists;
-		boolean ready;
-		void dispose() { if(lists!=0) GL11.glDeleteLists(lists,3);lists=0; }
+		IntelProjectionBlockRenderer builder;
+		void dispose() { if(builder!=null) builder.dispose(); }
 	}
+	private int textureGeneration;
+	private final FloatBuffer matrixBuffer=BufferUtils.createFloatBuffer(16);
+	private final Matrix4f modelView=new Matrix4f();
 	private final Map<TileEntityIntelProjector,Cache> caches=new LinkedHashMap<TileEntityIntelProjector,Cache>(8,.75F,true);
+
+	public RenderIntelProjector() { MinecraftForge.EVENT_BUS.register(this); }
+	@SubscribeEvent public void texturesReloaded(TextureStitchEvent.Post event) { textureGeneration++; }
 
 	@Override public void renderTileEntityAt(TileEntity entity,double x,double y,double z,float partial) {
 		TileEntityIntelProjector tile=(TileEntityIntelProjector)entity;
@@ -38,10 +48,10 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			vertex(-.47,1.005,-.47);vertex(-.47,1.005,.47);vertex(.47,1.005,.47);vertex(.47,1.005,-.47);GL11.glEnd();
 			GL11.glColor4f(.15F,.8F,1,.9F);GL11.glLineWidth(2);GL11.glBegin(GL11.GL_LINE_LOOP);
 			vertex(-.43,1.008,-.43);vertex(-.43,1.008,.43);vertex(.43,1.008,.43);vertex(.43,1.008,-.43);GL11.glEnd();
-			if(tile.displayed==null) { label(tile.status(),0,1.4,0,.012F,0x78DFF7);return; }
+			if(tile.displayed==null || !tile.displayed.projection.hasBlockStates) { label(tile.status(),0,1.4,0,.012F,0x78DFF7);return; }
 			IntelProjection p=tile.displayed.projection;IntelProjectionView v=tile.view;
 			Cache cache=cache(tile,p,v);
-			if(!cache.ready) { label("Building scan geometry...",0,1.4,0,.012F,0x78DFF7);return; }
+			if(!cache.builder.ready) { label("Building block model...",0,1.4,0,.012F,0x78DFF7);return; }
 			// These bounds never change with clipping or selection: coordinates stay aligned.
 			double[] bounds=p.bounds(v.terrain);
 			double minX=bounds[0],minY=bounds[1],minZ=bounds[2],maxX=bounds[3],maxY=bounds[4],maxZ=bounds[5];
@@ -57,15 +67,15 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			GL11.glBegin(GL11.GL_LINES);
 			for(double a=minX;a<=maxX;a+=2) { vertex(a,minY-.15,minZ);vertex(a,minY-.15,maxZ); }
 			for(double a=minZ;a<=maxZ;a+=2) { vertex(minX,minY-.15,a);vertex(maxX,minY-.15,a); }GL11.glEnd();
-			// Depth prepass makes the exterior readable. Cutting geometry exposes the actual room surfaces.
-			// Keep the depth surface just behind its coplanar outlines so line rasterization does not produce broken edges.
-			GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(1F,1F);
-			GL11.glDepthMask(true);GL11.glColorMask(false,false,false,false);GL11.glCallList(cache.lists);
-			GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
-			GL11.glColorMask(true,true,true,true);GL11.glDepthMask(false);GL11.glDepthFunc(GL11.GL_LEQUAL);
-			GL11.glColor4f(.04F,.45F,.7F,.18F);GL11.glCallList(cache.lists);
-			GL11.glColor4f(.1F,.7F,1,.08F);GL11.glCallList(cache.lists+1);
-			GL11.glColor4f(.2F,.8F,1,.85F);GL11.glLineWidth(1.2F);GL11.glCallList(cache.lists+2);
+			bindTexture(TextureMap.locationBlocksTexture);GL11.glEnable(GL11.GL_TEXTURE_2D);
+			GL11.glEnable(GL11.GL_ALPHA_TEST);GL11.glAlphaFunc(GL11.GL_GREATER,.1F);GL11.glEnable(GL11.GL_DEPTH_TEST);
+			GL11.glDepthFunc(GL11.GL_LEQUAL);GL11.glDepthMask(true);GL11.glDisable(GL11.GL_BLEND);
+			GL11.glColor4f(1,1,1,1);cache.builder.drawOpaque();
+			GL11.glEnable(GL11.GL_BLEND);GL11.glDepthMask(false);
+			// Invert the actual camera transform, including third-person offset and the miniature's rotation/scale.
+			matrixBuffer.clear();GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX,matrixBuffer);modelView.load(matrixBuffer);
+			Matrix4f.invert(modelView,modelView);cache.builder.drawTransparent(modelView.m30,modelView.m31,modelView.m32);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);GL11.glDisable(GL11.GL_ALPHA_TEST);
 			// Symbols are always readable, including coincident missile/launcher coordinates and clipped equipment.
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 			int index=0;
@@ -94,7 +104,7 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 					label("#"+index+(selected?" "+f.classification.name():""),mx,my+offset,mz,.018F/scale,color,v.rotation);
 				}
 			}
-			if(cache.builder.truncated) label("Geometry limit reached - use a floor/side cut",(minX+maxX)/2,maxY+1,(minZ+maxZ)/2,.015F/scale,0xFFC964,v.rotation);
+			if(cache.builder.truncated) label("Block limit reached - use a floor/side cut",(minX+maxX)/2,maxY+1,(minZ+maxZ)/2,.015F/scale,0xFFC964,v.rotation);
 		} finally { OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,lightX,lightY);GL11.glPopMatrix();GL11.glPopAttrib(); }
 	}
 	private Cache cache(TileEntityIntelProjector tile,IntelProjection p,IntelProjectionView v) {
@@ -107,32 +117,12 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			if(caches.size()>=8) { it=caches.entrySet().iterator();Map.Entry<TileEntityIntelProjector,Cache> e=it.next();e.getValue().dispose();it.remove(); }
 			c=new Cache();caches.put(tile,c);
 		}
-		String key=p.id+":"+v.floor+":"+v.cutAxis+":"+v.cut+":"+v.terrain;
-		if(!key.equals(c.key)) { c.dispose();c.key=key;c.ready=false;c.builder=new IntelProjectionMesh.Builder(p,v.floor,v.cutAxis,v.cut,v.terrain); }
-		if(!c.ready) {
-			long deadline=System.nanoTime()+3000000L;
-			do {
-				if(c.builder.step(1)) {
-					c.lists=GLAllocation.generateDisplayLists(3);
-					for(int pass=0;pass<3;pass++) {
-						GL11.glNewList(c.lists+pass,GL11.GL_COMPILE);GL11.glBegin(pass==2?GL11.GL_LINES:GL11.GL_QUADS);
-						for(IntelProjectionMesh.Quad q:c.builder.quads) if(pass==2 || q.glass==(pass==1)) quad(q,pass==2);
-						GL11.glEnd();GL11.glEndList();
-					}
-					c.ready=true;break;
-				}
-			} while(System.nanoTime()<deadline);
-		}
+		String key=p.id+":"+v.floor+":"+v.cutAxis+":"+v.cut+":"+v.terrain+":"+textureGeneration;
+		if(!key.equals(c.key)) { c.dispose();c.key=key;c.builder=new IntelProjectionBlockRenderer(p,v); }
+		c.builder.step();
 		return c;
 	}
-	private static void quad(IntelProjectionMesh.Quad q,boolean edges) {
-		int u=(q.axis+1)%3,v=(q.axis+2)%3;
-		double[][] points={{q.x,q.y,q.z},{q.x,q.y,q.z},{q.x,q.y,q.z},{q.x,q.y,q.z}};
-		points[1][u]+=q.width;points[2][u]+=q.width;points[2][v]+=q.height;points[3][v]+=q.height;
-		for(int i=0;i<4;i++) { vertex(points[i][0],points[i][1],points[i][2]);
-			if(edges) { double[] next=points[(i+1)%4];vertex(next[0],next[1],next[2]); }
-		}
-	}
+
 	private static void vertex(double x,double y,double z) { GL11.glVertex3d(x,y,z); }
 	private void label(String text,double x,double y,double z,double size,int color) {
 		label(text,x,y,z,size,color,0);

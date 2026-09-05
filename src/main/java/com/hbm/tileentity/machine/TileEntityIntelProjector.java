@@ -1,6 +1,7 @@
 package com.hbm.tileentity.machine;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 import com.hbm.interfaces.IControlReceiver;
 import com.hbm.inventory.gui.GUIIntelProjector;
 import com.hbm.packet.PacketDispatcher;
@@ -37,27 +38,35 @@ import net.minecraftforge.common.DimensionManager;
 
 @Optional.Interface(iface="li.cil.oc.api.network.SimpleComponent", modid="OpenComputers")
 public class TileEntityIntelProjector extends TileEntity implements SimpleComponent, IBufPacketReceiver, IControlReceiver, IGUIProvider {
-	private static final int MAX_PACKET=2*1024*1024;
 	public volatile IntelScanResult displayed;
 	public final IntelProjectionView view=new IntelProjectionView();
-	public String sceneId="";
+	public volatile String sceneId="";
 	public int frequency;
-	private byte[] compressed=new byte[0];
-	private volatile IntelScanResult pending;
-	private int requestTicks;
+	private static final class EncodedSnapshot {
+		final String id;final byte[] bytes;
+		EncodedSnapshot(String id,byte[] bytes) { this.id=id;this.bytes=bytes; }
+	}
+	private volatile EncodedSnapshot encoded;
+	private final AtomicReference<IntelScanResult> pending=new AtomicReference<IntelScanResult>();
+	private final IntelProjectionTransfer transfer=new IntelProjectionTransfer();
+	private int requestTicks, requestedOffset=-1;
 
 	@Override public void updateEntity() {
 		if(worldObj.isRemote) {
 			acceptPendingSnapshot();
-			if(!sceneId.isEmpty() && displayed==null && requestTicks--<=0) {
-				requestTicks=100;
-				NBTTagCompound request=new NBTTagCompound();request.setBoolean("snapshot",true);
-				PacketDispatcher.wrapper.sendToServer(new NBTControlPacket(request,xCoord,yCoord,zCoord));
+			if(!sceneId.isEmpty() && displayed==null) {
+				int offset=transfer.offset(sceneId);
+				if(offset!=requestedOffset || requestTicks--<=0) {
+					requestedOffset=offset;requestTicks=100;
+					NBTTagCompound request=new NBTTagCompound();request.setBoolean("snapshot",true);
+					request.setString("sceneId",sceneId);request.setInteger("offset",offset);
+					PacketDispatcher.wrapper.sendToServer(new NBTControlPacket(request,xCoord,yCoord,zCoord));
+				}
 			}
 		}
 	}
 	public void acceptPendingSnapshot() {
-		IntelScanResult result=pending;pending=null;
+		IntelScanResult result=pending.getAndSet(null);
 		if(result!=null && result.projection!=null && result.projection.id.equals(sceneId)) displayed=result;
 	}
 	public NBTTagCompound state() {
@@ -65,7 +74,7 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 	}
 	public void readState(NBTTagCompound n) {
 		String next=n.getString("sceneId");
-		if(!next.equals(sceneId)) { displayed=null;requestTicks=0; }
+		if(!next.equals(sceneId)) { displayed=null;requestTicks=0;requestedOffset=-1;transfer.reset(); }
 		sceneId=next;frequency=n.getInteger("frequency");view.read(n);
 	}
 	private void changed() { markDirty();if(worldObj!=null) worldObj.markBlockForUpdate(xCoord,yCoord,zCoord); }
@@ -73,18 +82,26 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 	@Override public void onDataPacket(NetworkManager network,S35PacketUpdateTileEntity packet) { readState(packet.func_148857_g()); }
 
 	private void pack() {
-		NBTTagCompound n=new NBTTagCompound();if(displayed!=null) displayed.writeToNBT(n);
-		try { compressed=CompressedStreamTools.compress(n); }
-		catch(IOException e) { throw new IllegalStateException("Could not encode projection",e); }
-		if(compressed.length>MAX_PACKET) throw new IllegalStateException("Projection packet too large");
+		IntelScanResult scene=displayed;if(scene==null) { encoded=null;return; }
+		NBTTagCompound n=new NBTTagCompound();scene.writeToNBT(n);
+		try {
+			byte[] bytes=CompressedStreamTools.compress(n);
+			if(bytes.length>IntelProjectionTransfer.MAX_BYTES) throw new IllegalStateException("Projection packet too large");
+			encoded=new EncodedSnapshot(scene.projection.id,bytes);
+		} catch(IOException e) { throw new IllegalStateException("Could not encode projection",e); }
 	}
-	@Override public void serialize(ByteBuf buf) { buf.writeInt(compressed.length);buf.writeBytes(compressed); }
+	@Override public void serialize(ByteBuf buf) { serializeChunk(buf,0); }
+	public void serializeChunk(ByteBuf buf,int offset) {
+		EncodedSnapshot snapshot=encoded;IntelProjectionTransfer.write(buf,snapshot.id,snapshot.bytes,offset);
+	}
 	@Override public void deserialize(ByteBuf buf) {
-		int length=buf.readInt();
-		if(length<=0 || length>MAX_PACKET || length>buf.readableBytes()) throw new IllegalArgumentException("Invalid projection packet");
-		byte[] bytes=new byte[length];buf.readBytes(bytes);
-		try { pending=IntelScanResult.readFromNBT(CompressedStreamTools.func_152457_a(bytes,new NBTSizeTracker(4*1024*1024))); }
-		catch(IOException e) { throw new IllegalArgumentException("Invalid compressed projection",e); }
+		String expected=sceneId;byte[] bytes=transfer.accept(buf,expected);if(bytes==null) return;
+		try {
+			IntelScanResult result=IntelScanResult.readFromNBT(CompressedStreamTools.func_152457_a(bytes,new NBTSizeTracker(16*1024*1024)));
+			if(result.projection==null || !result.projection.id.equals(expected)) { transfer.reset();return; }
+			pending.set(result);
+		}
+		catch(IOException e) { transfer.reset();throw new IllegalArgumentException("Invalid compressed projection",e); }
 	}
 	@Override public void writeToNBT(NBTTagCompound n) {
 		super.writeToNBT(n);n.setTag("controls",state());
@@ -105,7 +122,14 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 	@Override public void receiveControl(NBTTagCompound n) { }
 	@Override public void receiveControl(EntityPlayer player,NBTTagCompound n) {
 		if(n.getBoolean("snapshot")) {
-			if(displayed!=null) PacketDispatcher.wrapper.sendTo(new BufPacket(xCoord,yCoord,zCoord,this),(EntityPlayerMP)player);
+			final int offset=n.getInteger("offset");final EncodedSnapshot snapshot=encoded;
+			if(snapshot!=null && snapshot.id.equals(n.getString("sceneId")) && offset>=0 && offset<snapshot.bytes.length
+					&& offset%IntelProjectionTransfer.CHUNK_SIZE==0) {
+				PacketDispatcher.wrapper.sendTo(new BufPacket(xCoord,yCoord,zCoord,new IBufPacketReceiver() {
+					public void serialize(ByteBuf buf) { IntelProjectionTransfer.write(buf,snapshot.id,snapshot.bytes,offset); }
+					public void deserialize(ByteBuf buf) { }
+				}),(EntityPlayerMP)player);
+			}
 		} else if(player.getDistanceSq(xCoord+.5,yCoord+.5,zCoord+.5)<=64) {
 			try { control(n.getString("action"),n.getString("value")); }
 			catch(IllegalArgumentException e) { player.addChatMessage(new ChatComponentText(e.getMessage())); }
@@ -119,6 +143,7 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 		IntelScanResult scene=displayed;
 		if(scene==null) return sceneId.isEmpty()?"Waiting for a completed combined scan":"Receiving scan geometry";
 		IntelProjection p=scene.projection;
+		if(!p.hasBlockStates) return "Rescan to display block textures";
 		return "DISPLAYED | "+view.mode+" | X="+scene.targetX+" Z="+scene.targetZ+" | "+scene.findings.size()
 				+" findings | geometry "+p.coveredColumns()+"/"+(p.width*p.depth)+" columns | floor="+view.floor;
 	}
@@ -139,7 +164,7 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 		SatelliteBase satellite=SatelliteSavedData.getData(source).getSatFromFreq(freq);
 		if(!(satellite instanceof SatelliteCombinedIntel)) return new Object[]{false,"Combined intelligence satellite required"};
 		IntelScanResult result=((SatelliteCombinedIntel)satellite).getLastResult();
-		if(!IntelProjection.matches(result,dimension,id)) return new Object[]{false,"Scan changed or lacks geometry; run a new combined scan"};
+		if(!IntelProjection.matches(result,dimension,id) || !result.projection.hasBlockStates) return new Object[]{false,"Scan changed or lacks block textures; run a new combined scan"};
 		if(sceneId.equals(id) && frequency==freq) return new Object[]{true,status()};
 		// Retain only geometry and findings, not the old sparse terrain pages.
 		IntelScanResult scene=new IntelScanResult();scene.mode=IntelScanMode.COMBINED;scene.projection=result.projection;
@@ -159,7 +184,7 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 	@Callback(direct=true,doc="function(index:number):string -- Finding number, type and original coordinates") @Optional.Method(modid="OpenComputers")
 	public Object[] getFinding(Context context,Arguments args) { return new Object[]{finding(args.checkInteger(0))}; }
 	@Callback(doc="function():boolean -- Clear the projection") @Optional.Method(modid="OpenComputers")
-	public Object[] clear(Context context,Arguments args) { displayed=null;sceneId="";compressed=new byte[0];changed();return new Object[]{true}; }
+	public Object[] clear(Context context,Arguments args) { displayed=null;sceneId="";encoded=null;changed();return new Object[]{true}; }
 
 	@Override public Container provideContainer(int id,EntityPlayer player,World world,int x,int y,int z) {
 		return new Container() { @Override public boolean canInteractWith(EntityPlayer p) { return !isInvalid() && p.getDistanceSq(xCoord+.5,yCoord+.5,zCoord+.5)<=64; } };

@@ -17,7 +17,7 @@ import net.minecraft.world.World;
 public final class IntelProjectionScanner {
 	public interface Access {
 		boolean loaded(int x, int z);
-		/** Low eight bits: geometry; bit eight: natural terrain; bit nine: glazing. */
+		/** Low eight bits: geometry; bit eight: natural terrain; bit nine: glazing; remaining bits: block ID and metadata. */
 		int cell(int x, int y, int z);
 	}
 	public void process(Access world, IntelScanJob job, IntelScanResult result, int columns) {
@@ -32,6 +32,7 @@ public final class IntelProjectionScanner {
 				for(int y=0;y<256;y++) {
 					int cell=world.cell(p.originX+x,y,p.originZ+z);
 					p.set(x,y,z,cell&255,(cell&256)!=0,(cell&512)!=0);
+					p.captureBlock(x,y,z,cell>>>10);
 				}
 			}
 			job.processedWork++;
@@ -59,7 +60,7 @@ public final class IntelProjectionScanner {
 				}
 				int meta=world.getBlockMetadata(x,y,z);
 				return shape(b,world,x,y,z,neighbors) | (natural(b,meta)?256:0)
-						| (b.getMaterial()==Material.glass?512:0);
+						| (b.getMaterial()==Material.glass?512:0) | (((Block.getIdFromBlock(b)<<4)|(meta&15))<<10);
 			}
 		};
 	}
