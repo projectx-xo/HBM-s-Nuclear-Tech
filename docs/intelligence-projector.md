@@ -73,3 +73,5 @@ JUnit covers capture budgets, missing columns, odd Y levels, palette reuse, bloc
 The local test fixture captures a building with colored HBM concrete, stone brick, wood, glass, slabs and differently oriented stairs. It loads a real scanner snapshot directly into the table, so it does not verify live satellite-to-table operation on an OpenComputers server.
 
 The v1.10 development client rendered the textured snapshot without OpenGL errors. User-captured screenshots confirmed the exterior, colored concrete floors, transparent glass, wooden partitions, slab heights, stairs and finding markers viewed from inside the miniature. The native packet path initially exposed Forge backing-array padding; the receiver fix now has a regression test. The complete Java suite passes 51 tests.
+
+Published JAR: [tjHBM-NTM-v1.10.jar](https://github.com/projectx-xo/HBM-s-Nuclear-Tech/releases/download/tjHBM-NTM-v1.10/tjHBM-NTM-v1.10.jar). [GitHub build](https://github.com/projectx-xo/HBM-s-Nuclear-Tech/actions/runs/33991363420) passed; the downloaded asset matches SHA-256 `ce3c0626b4b6bf4deeea1c089a07f355736f71746035b278184020d2fff01145`.

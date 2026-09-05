@@ -40,9 +40,14 @@ Files: new `IntelProjectionBlockAccess.java`, new `IntelProjectionBlockRenderer.
 
 ### 4. Publish
 - [x] Update mod version and setup documentation, including fresh-scan and custom-model limitations.
-- [ ] Review, build and push the existing feature branch; verify the published JAR and update STRATCOM documentation without changing its protocol.
+- [x] Review, build and push the existing feature branch; verify the published JAR and update STRATCOM documentation without changing its protocol.
 
 ## Validation evidence
 - Java 8: 51 tests passed, zero failures/errors. The new Forge padded-buffer regression failed before the receiver fix and passed afterward.
 - Peer review resolved snapshot publication/handoff races and camera-dependent glass ordering.
 - Local client captured block textures, concrete variants, slab/stair geometry and interiors; no GL errors at fixture capture. User F2 screenshots at 16:50 show the resulting miniature. Live OpenComputers satellite-to-table operation remains outside this local fixture test.
+
+## Published release
+- Source: `d4b462f884eecc65cd71cba27d679221babff185`. GitHub Actions run `33991363420` built and published v1.10 successfully.
+- Downloaded release JAR passed ZIP integrity/class checks and matches the GitHub asset SHA-256: `ce3c0626b4b6bf4deeea1c089a07f355736f71746035b278184020d2fff01145`. The local smoke-test mod is not in the release.
+- STRATCOM 3.4.0 remains compatible; its README now documents v1.10 and a fresh combined scan.
