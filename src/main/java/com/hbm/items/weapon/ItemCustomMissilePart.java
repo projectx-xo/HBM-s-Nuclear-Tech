@@ -94,7 +94,8 @@ public class ItemCustomMissilePart extends Item {
 
 		//shit solution but it works. this allows traits to be attached to these empty dummy types, allowing for custom warheads
 		CUSTOM0, CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4, CUSTOM5, CUSTOM6, CUSTOM7, CUSTOM8, CUSTOM9,
-		BUSTER_PENETRATING;
+		BUSTER_PENETRATING,
+		BUSTER_THERMONUCLEAR;
 
 		/** Overrides that type's impact effect. Only runs serverside */
 		public Consumer<EntityMissileCustom> impactCustom = null;
@@ -216,7 +217,7 @@ public class ItemCustomMissilePart extends Item {
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.type") + ": " + EnumChatFormatting.GRAY + getWarhead((WarheadType)attributes[0]));
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.strength") + ": " + EnumChatFormatting.GRAY + (Float)attributes[1]);
 					list.add(EnumChatFormatting.BOLD + I18nUtil.resolveKey("item.missile.part.weight") + ": " + EnumChatFormatting.GRAY + (Float)attributes[2] + "t");
-					if(attributes[0] == WarheadType.BUSTER_PENETRATING) {
+					if(attributes[0] == WarheadType.BUSTER_PENETRATING || attributes[0] == WarheadType.BUSTER_THERMONUCLEAR) {
 						list.add(EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.missile.part.penetration", (int) BunkerBusterPenetration.MAX_RESISTANCE));
 						list.add(EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.missile.part.arming", (int) BunkerBusterPenetration.ARMING_RESISTANCE));
 						list.add(EnumChatFormatting.GRAY + I18nUtil.resolveKey("item.missile.part.penetrationDepth", BunkerBusterPenetration.MAX_DEPTH));
@@ -288,6 +289,8 @@ public class ItemCustomMissilePart extends Item {
 				return EnumChatFormatting.DARK_GREEN + I18nUtil.resolveKey("item.warhead.desc.nuclear");
 			case TX:
 				return EnumChatFormatting.DARK_PURPLE + I18nUtil.resolveKey("item.warhead.desc.thermonuclear");
+			case BUSTER_THERMONUCLEAR:
+				return EnumChatFormatting.DARK_PURPLE + I18nUtil.resolveKey("item.warhead.desc.bunker_buster_thermonuclear");
 			case N2:
 				return EnumChatFormatting.RED + I18nUtil.resolveKey("item.warhead.desc.n2");
 			case BALEFIRE:

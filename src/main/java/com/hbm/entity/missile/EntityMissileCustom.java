@@ -192,6 +192,9 @@ public class EntityMissileCustom extends EntityMissileBaseNT implements IChunkLo
 		case BUSTER_PENETRATING:
 			ExplosionBunkerBuster.detonate(worldObj, mop, Vec3.createVectorHelper(motionX, motionY, motionZ), strength);
 			break;
+		case BUSTER_THERMONUCLEAR:
+			ExplosionBunkerBuster.detonate(worldObj, mop, Vec3.createVectorHelper(motionX, motionY, motionZ), strength, true);
+			break;
 		case NUCLEAR:
 		case TX:
 			worldObj.spawnEntityInWorld(EntityNukeExplosionMK5.statFac(worldObj, (int) strength, posX, posY, posZ));

@@ -34,6 +34,12 @@ public class MissileTab extends CreativeTabs {
 	public void displayAllReleventItems(List list) {
 		
 		super.displayAllReleventItems(list);
+		list.add(ItemCustomMissile.buildMissile(
+				ModItems.mp_chip_3,
+				ModItems.mp_warhead_20_buster_thermonuclear_american_flag,
+				ModItems.mp_fuselage_20_solid_american_flag,
+				ModItems.mp_stability_20_american_flag,
+				ModItems.mp_thruster_20_solid_american_flag).setStackDisplayName(EnumChatFormatting.DARK_PURPLE + "Stars and Stripes"));
 		
 		list.add(ItemCustomMissile.buildMissile(
 				ModItems.mp_chip_3,

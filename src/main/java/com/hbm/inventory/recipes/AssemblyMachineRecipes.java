@@ -902,6 +902,8 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 				.inputItems(new ComparableStack(ModItems.seg_15, 1), new ComparableStack(ModItems.seg_20, 1), new OreDictStack(TI.plate(), 48), new OreDictStack(STEEL.plate(), 16)));
 
 		// custom missile warheads
+		this.register(new GenericRecipe("ass.mpw20bustertxusa").setup(800, 100).outputItems(new ItemStack(ModItems.mp_warhead_20_buster_thermonuclear_american_flag))
+				.inputItems(new ComparableStack(ModItems.mp_warhead_20_thermonuclear_minuteman), new ComparableStack(ModItems.mp_warhead_20_buster_minuteman), new OreDictStack(KEY_RED, 1), new OreDictStack(KEY_WHITE, 1), new OreDictStack(KEY_BLUE, 1)));
 		this.register(new GenericRecipe("ass.mpw20busterminuteman").setup(400, 100).outputItems(new ItemStack(ModItems.mp_warhead_20_buster_minuteman, 1))
 				.inputItems(new ComparableStack(ModItems.seg_20, 1), new OreDictStack(WEAPONSTEEL.plate(), 32), new OreDictStack(W.ingot(), 16), new OreDictStack(ANY_HIGHEXPLOSIVE.ingot(), 12), new ComparableStack(ModItems.circuit, 4, EnumCircuitType.ADVANCED)));
 		this.register(new GenericRecipe("ass.mpw20heminuteman").setup(400, 100).outputItems(new ItemStack(ModItems.mp_warhead_20_he_minuteman, 1))

@@ -176,6 +176,9 @@ public class WeaponRecipes {
 		CraftingManager.addShapelessAuto(new ItemStack(ModItems.missile_emp, 1), new Object[] { ModItems.missile_assembly, ModItems.ducttape, ModBlocks.emp_bomb });
 		
 		//Missile fins
+		CraftingManager.addShapelessAuto(new ItemStack(ModItems.mp_thruster_20_solid_american_flag), new Object[] { ModItems.mp_thruster_20_solid, KEY_RED, KEY_WHITE, KEY_BLUE });
+		CraftingManager.addShapelessAuto(new ItemStack(ModItems.mp_stability_20_american_flag), new Object[] { ModItems.mp_stability_20_white, KEY_RED, KEY_WHITE, KEY_BLUE });
+		CraftingManager.addShapelessAuto(new ItemStack(ModItems.mp_fuselage_20_solid_american_flag), new Object[] { ModItems.mp_fuselage_20_solid_minuteman, KEY_RED, KEY_WHITE, KEY_BLUE });
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_10_flat, 1), new Object[] { "PSP", "P P", 'P', STEEL.plate(), 'S', ModBlocks.steel_scaffold });
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_10_cruise, 1), new Object[] { "ASA", " S ", "PSP", 'A', TI.plate(), 'P', STEEL.plate(), 'S', ModBlocks.steel_scaffold });
 		CraftingManager.addRecipeAuto(new ItemStack(ModItems.mp_stability_10_space, 1), new Object[] { "ASA", "PSP", 'A', AL.plate(), 'P', STEEL.ingot(), 'S', ModBlocks.steel_scaffold });

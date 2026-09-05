@@ -1205,6 +1205,7 @@ public class ModItems {
 	public static Item mp_thruster_20_kerosene_dual;
 	public static Item mp_thruster_20_kerosene_triple;
 	public static Item mp_thruster_20_solid;
+	public static Item mp_thruster_20_solid_american_flag;
 	public static Item mp_thruster_20_solid_multi;
 	public static Item mp_thruster_20_solid_multier;
 
@@ -1216,6 +1217,7 @@ public class ModItems {
 	public static Item mp_stability_15_soyuz;
 	public static Item mp_stability_20_flat;
 	public static Item mp_stability_20_white;
+	public static Item mp_stability_20_american_flag;
 
 	public static Item mp_fuselage_10_kerosene;
 	public static Item mp_fuselage_10_kerosene_camo;
@@ -1303,6 +1305,7 @@ public class ModItems {
 	public static Item mp_fuselage_15_20_solid;
 	public static Item mp_fuselage_15_20_solid_minuteman;
 	public static Item mp_fuselage_20_solid_minuteman;
+	public static Item mp_fuselage_20_solid_american_flag;
 
 	public static Item mp_warhead_10_he;
 	public static Item mp_warhead_10_incendiary;
@@ -1323,6 +1326,7 @@ public class ModItems {
 	public static Item mp_warhead_20_buster_minuteman;
 	public static Item mp_warhead_20_he_minuteman;
 	public static Item mp_warhead_20_thermonuclear_minuteman;
+	public static Item mp_warhead_20_buster_thermonuclear_american_flag;
 
 	public static Item mp_chip_1;
 	public static Item mp_chip_2;
@@ -3453,6 +3457,7 @@ public class ModItems {
 		mp_thruster_20_kerosene_dual = new ItemCustomMissilePart().makeThruster(FuelType.KEROSENE, 1F, 100F, PartSize.SIZE_20).setHealth(30F)				.setUnlocalizedName("mp_thruster_20_kerosene_dual");
 		mp_thruster_20_kerosene_triple = new ItemCustomMissilePart().makeThruster(FuelType.KEROSENE, 1F, 100F, PartSize.SIZE_20).setHealth(30F)				.setUnlocalizedName("mp_thruster_20_kerosene_triple");
 		mp_thruster_20_solid = new ItemCustomMissilePart().makeThruster(FuelType.SOLID, 1F, 100F, PartSize.SIZE_20).setHealth(35F).setWittyText("It's basically just a big hole at the end of the fuel tank.").setUnlocalizedName("mp_thruster_20_solid");
+		mp_thruster_20_solid_american_flag = ((ItemCustomMissilePart) mp_thruster_20_solid).copy().setTitle("American Flag").setUnlocalizedName("mp_thruster_20_solid_american_flag");
 		mp_thruster_20_solid_multi = new ItemCustomMissilePart().makeThruster(FuelType.SOLID, 1F, 100F, PartSize.SIZE_20).setHealth(35F)					.setUnlocalizedName("mp_thruster_20_solid_multi");
 		mp_thruster_20_solid_multier = new ItemCustomMissilePart().makeThruster(FuelType.SOLID, 1F, 100F, PartSize.SIZE_20).setHealth(35F).setWittyText("Did I miscount? Hope not.").setUnlocalizedName("mp_thruster_20_solid_multier");
 
@@ -3464,6 +3469,7 @@ public class ModItems {
 		mp_stability_15_soyuz = new ItemCustomMissilePart().makeStability(0.25F, PartSize.SIZE_15).setHealth(15F).setRarity(Rarity.COMMON).setWittyText("Союз!").setUnlocalizedName("mp_stability_15_soyuz");
 		mp_stability_20_flat = new ItemCustomMissilePart().makeStability(0.5F, PartSize.SIZE_20)															.setUnlocalizedName("mp_s_20");
 		mp_stability_20_white = new ItemCustomMissilePart().makeStability(0.5F, PartSize.SIZE_20).setHealth(10F).setUnlocalizedName("mp_stability_20_white");
+		mp_stability_20_american_flag = ((ItemCustomMissilePart) mp_stability_20_white).copy().setTitle("American Flag").setUnlocalizedName("mp_stability_20_american_flag");
 
 		mp_fuselage_10_kerosene = new ItemCustomMissilePart().makeFuselage(FuelType.KEROSENE, 2500F, PartSize.SIZE_10, PartSize.SIZE_10).setAuthor("Hoboy").setHealth(20F).setUnlocalizedName("mp_fuselage_10_kerosene");
 		mp_fuselage_10_kerosene_camo =			((ItemCustomMissilePart) mp_fuselage_10_kerosene).copy().setRarity(Rarity.COMMON).setTitle("Camo").setUnlocalizedName("mp_fuselage_10_kerosene_camo");
@@ -3551,6 +3557,7 @@ public class ModItems {
 		mp_fuselage_15_20_solid = new ItemCustomMissilePart().makeFuselage(FuelType.SOLID, 20000, PartSize.SIZE_15, PartSize.SIZE_20).setHealth(70F).setUnlocalizedName("mp_fuselage_15_20_solid").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_fuselage");
 		mp_fuselage_15_20_solid_minuteman = ((ItemCustomMissilePart) mp_fuselage_15_20_solid).copy().setRarity(Rarity.UNCOMMON).setTitle("Minuteman III").setUnlocalizedName("mp_fuselage_15_20_solid_minuteman");
 		mp_fuselage_20_solid_minuteman = new ItemCustomMissilePart().makeFuselage(FuelType.SOLID, 20000, PartSize.SIZE_20, PartSize.SIZE_20).setHealth(70F).setTitle("Minuteman III").setUnlocalizedName("mp_fuselage_20_solid_minuteman");
+		mp_fuselage_20_solid_american_flag = ((ItemCustomMissilePart) mp_fuselage_20_solid_minuteman).copy().setTitle("American Flag").setUnlocalizedName("mp_fuselage_20_solid_american_flag");
 
 		mp_warhead_10_he = new ItemCustomMissilePart().makeWarhead(WarheadType.HE, 15F, 1.5F, PartSize.SIZE_10).setHealth(5F)								.setUnlocalizedName("mp_warhead_10_he").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
 		mp_warhead_10_incendiary = new ItemCustomMissilePart().makeWarhead(WarheadType.INC, 15F, 1.5F, PartSize.SIZE_10).setHealth(5F)					.setUnlocalizedName("mp_warhead_10_incendiary").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_warhead");
@@ -3571,6 +3578,7 @@ public class ModItems {
 		mp_warhead_20_buster_minuteman = new ItemCustomMissilePart().makeWarhead(WarheadType.BUSTER_PENETRATING, 20F, 10F, PartSize.SIZE_20).setHealth(40F).setTitle("Minuteman III").setUnlocalizedName("mp_warhead_20_buster_minuteman");
 		mp_warhead_20_he_minuteman = new ItemCustomMissilePart().makeWarhead(WarheadType.HE, 75F, 7.5F, PartSize.SIZE_20).setHealth(25F).setTitle("Minuteman III").setUnlocalizedName("mp_warhead_20_he_minuteman");
 		mp_warhead_20_thermonuclear_minuteman = new ItemCustomMissilePart().makeWarhead(WarheadType.TX, 250F, 10F, PartSize.SIZE_20).setHealth(35F).setTitle("Minuteman III").setUnlocalizedName("mp_warhead_20_thermonuclear_minuteman");
+		mp_warhead_20_buster_thermonuclear_american_flag = new ItemCustomMissilePart().makeWarhead(WarheadType.BUSTER_THERMONUCLEAR, 250F, 10F, PartSize.SIZE_20).setHealth(40F).setTitle("American Flag").setUnlocalizedName("mp_warhead_20_buster_thermonuclear_american_flag");
 
 		mp_chip_1 = new ItemCustomMissilePart().makeChip(0.1F)	.setUnlocalizedName("mp_c_1").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_c_1");
 		mp_chip_2 = new ItemCustomMissilePart().makeChip(0.05F)	.setUnlocalizedName("mp_c_2").setMaxStackSize(1).setCreativeTab(MainRegistry.missileTab).setTextureName(RefStrings.MODID + ":mp_c_2");
@@ -5590,6 +5598,7 @@ public class ModItems {
 		GameRegistry.registerItem(mp_thruster_20_kerosene_dual, mp_thruster_20_kerosene_dual.getUnlocalizedName());
 		GameRegistry.registerItem(mp_thruster_20_kerosene_triple, mp_thruster_20_kerosene_triple.getUnlocalizedName());
 		GameRegistry.registerItem(mp_thruster_20_solid, mp_thruster_20_solid.getUnlocalizedName());
+		GameRegistry.registerItem(mp_thruster_20_solid_american_flag, mp_thruster_20_solid_american_flag.getUnlocalizedName());
 		GameRegistry.registerItem(mp_thruster_20_solid_multi, mp_thruster_20_solid_multi.getUnlocalizedName());
 		GameRegistry.registerItem(mp_thruster_20_solid_multier, mp_thruster_20_solid_multier.getUnlocalizedName());
 		GameRegistry.registerItem(mp_stability_10_flat, mp_stability_10_flat.getUnlocalizedName());
@@ -5600,6 +5609,7 @@ public class ModItems {
 		GameRegistry.registerItem(mp_stability_15_soyuz, mp_stability_15_soyuz.getUnlocalizedName());
 		GameRegistry.registerItem(mp_stability_20_flat, mp_stability_20_flat.getUnlocalizedName());
 		GameRegistry.registerItem(mp_stability_20_white, mp_stability_20_white.getUnlocalizedName());
+		GameRegistry.registerItem(mp_stability_20_american_flag, mp_stability_20_american_flag.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_10_kerosene, mp_fuselage_10_kerosene.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_10_kerosene_camo, mp_fuselage_10_kerosene_camo.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_10_kerosene_desert, mp_fuselage_10_kerosene_desert.getUnlocalizedName());
@@ -5676,6 +5686,7 @@ public class ModItems {
 		GameRegistry.registerItem(mp_fuselage_15_20_solid, mp_fuselage_15_20_solid.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_15_20_solid_minuteman, mp_fuselage_15_20_solid_minuteman.getUnlocalizedName());
 		GameRegistry.registerItem(mp_fuselage_20_solid_minuteman, mp_fuselage_20_solid_minuteman.getUnlocalizedName());
+		GameRegistry.registerItem(mp_fuselage_20_solid_american_flag, mp_fuselage_20_solid_american_flag.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_10_he, mp_warhead_10_he.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_10_incendiary, mp_warhead_10_incendiary.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_10_buster, mp_warhead_10_buster.getUnlocalizedName());
@@ -5695,6 +5706,7 @@ public class ModItems {
 		GameRegistry.registerItem(mp_warhead_20_buster_minuteman, mp_warhead_20_buster_minuteman.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_20_he_minuteman, mp_warhead_20_he_minuteman.getUnlocalizedName());
 		GameRegistry.registerItem(mp_warhead_20_thermonuclear_minuteman, mp_warhead_20_thermonuclear_minuteman.getUnlocalizedName());
+		GameRegistry.registerItem(mp_warhead_20_buster_thermonuclear_american_flag, mp_warhead_20_buster_thermonuclear_american_flag.getUnlocalizedName());
 		GameRegistry.registerItem(mp_chip_1, mp_chip_1.getUnlocalizedName());
 		GameRegistry.registerItem(mp_chip_2, mp_chip_2.getUnlocalizedName());
 		GameRegistry.registerItem(mp_chip_3, mp_chip_3.getUnlocalizedName());
