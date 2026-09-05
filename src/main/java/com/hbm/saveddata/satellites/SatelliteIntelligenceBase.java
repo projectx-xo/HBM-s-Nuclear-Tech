@@ -10,6 +10,7 @@ import com.hbm.saveddata.satellites.intel.IntelSubsurfaceScanner;
 import com.hbm.saveddata.satellites.intel.IntelSurfaceScanner;
 import com.hbm.saveddata.satellites.intel.IntelTargetDetector;
 import com.hbm.saveddata.satellites.intel.IntelTargetScanner;
+import com.hbm.saveddata.satellites.intel.IntelProjectionScanner;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
@@ -31,6 +32,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	protected final IntelSubsurfaceScanner subsurfaceScanner = new IntelSubsurfaceScanner(intelClassifier);
 	protected final IntelStructuralAnalyzer structuralAnalyzer = new IntelStructuralAnalyzer(intelClassifier);
 	protected final IntelTargetScanner targetScanner = new IntelTargetScanner();
+	protected final IntelProjectionScanner projectionScanner = new IntelProjectionScanner();
 
 	public IntelScanJob activeJob;
 	public IntelScanResult activeResult;
@@ -64,7 +66,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		result.dimension = world.provider.dimensionId;
 		result.startedAt = world.getTotalWorldTime();
 		result.totalColumns = SCAN_SIZE * SCAN_SIZE;
-		if(result.mode == IntelScanMode.COMBINED) activeJob.totalWork += targetScanner.getChunkCount(result);
+		if(result.mode == IntelScanMode.COMBINED) activeJob.totalWork += targetScanner.getChunkCount(result) + SCAN_SIZE * SCAN_SIZE;
 		activeResult = result;
 		markDirty();
 		return true;
@@ -187,6 +189,15 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 			if(activeJob.phase == 3) {
 				targetScanner.process(new IntelTargetDetector(world), activeJob, activeResult, 1);
 				if(activeJob.phaseCursor >= targetScanner.getChunkCount(activeResult)) {
+					activeJob.phase = 4;
+					activeJob.phaseCursor = 0;
+				}
+				return;
+			}
+
+			if(activeJob.phase == 4) {
+				projectionScanner.process(IntelProjectionScanner.access(world), activeJob, activeResult, 16);
+				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) {
 					activeJob.processedWork = activeJob.totalWork;
 					finishOrFail(world);
 				}

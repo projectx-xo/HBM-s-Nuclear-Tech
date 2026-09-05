@@ -28,6 +28,7 @@ public class IntelScanResult {
 	public final List<IntelSurfaceCell> subsurfaceCells = new ArrayList<IntelSurfaceCell>();
 	public final List<IntelStructuralCell> structuralCells = new ArrayList<IntelStructuralCell>();
 	public IntelStructuralSummary structuralSummary;
+	public IntelProjection projection;
 
 	public int getCoveragePercent() {
 		if(totalColumns <= 0) return 0;

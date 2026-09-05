@@ -114,6 +114,7 @@ dependencies {
 	compileOnly("inventorytweaks:InventoryTweaks:1.59-dev:deobf") { transitive = false }
 
 	compileOnly("curse.maven:opencomputers-223008:6608364") { transitive = false }
+	testImplementation("curse.maven:opencomputers-223008:6608364") { transitive = false }
 
 	compileOnly("com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta.56-GTNH:dev") { transitive = false }
 }

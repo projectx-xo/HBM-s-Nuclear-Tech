@@ -5898,6 +5898,7 @@ tile.machine_rtg_purple.name=Antimatter Annihilation Generator
 tile.machine_rtg_red.name=Fulmination Generator
 tile.machine_rtg_yellow.name=Australium Superfuel Reactor
 tile.machine_satlink.name=Satellite Ground Station
+tile.intel_projector.name=Intelligence Projection Table
 tile.machine_satlink.freq=Freq
 tile.machine_satlink.connected=Connected
 tile.machine_satlink.yes=Yes

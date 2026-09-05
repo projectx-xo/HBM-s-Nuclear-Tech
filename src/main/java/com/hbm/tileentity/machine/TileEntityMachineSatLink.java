@@ -418,6 +418,16 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return sat == null ? null : sat.getLastResult();
 	}
 
+	@Callback(doc = "function():boolean,number,number,string -- Completed combined projection: frequency, dimension, snapshot ID; rescan older results")
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] intelProjection(Context context, Arguments args) {
+		SatelliteIntelligenceBase sat = getIntelligenceSatellite();
+		IntelScanResult result = sat == null || sat.activeJob != null ? null : sat.getLastResult();
+		if(result == null || result.mode != com.hbm.saveddata.satellites.intel.IntelScanMode.COMBINED || result.projection == null)
+			return new Object[] { false, "RESCAN_WITH_COMBINED_SATELLITE" };
+		return new Object[] { true, freq, result.dimension, result.projection.id };
+	}
+
 	private String encodeSurfacePage(java.util.List<IntelSurfaceCell> cells, int start, int end) {
 		StringBuilder out = new StringBuilder();
 		for(int i = start; i < end; i++) {

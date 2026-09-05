@@ -38,6 +38,7 @@ public final class IntelResultCodec {
 		nbt.setTag("structuralCells", structural);
 
 		if(result.structuralSummary != null) nbt.setTag("structuralSummary", result.structuralSummary.writeToNBT());
+		if(result.mode == IntelScanMode.COMBINED && result.projection != null) nbt.setTag("projection", result.projection.writeToNBT());
 	}
 
 	public static IntelScanResult readResult(NBTTagCompound nbt) {
@@ -73,6 +74,7 @@ public final class IntelResultCodec {
 		for(int i = 0; i < Math.min(structural.tagCount(), IntelScanResult.MAX_STRUCTURAL_CELLS); i++) result.structuralCells.add(IntelStructuralCell.readFromNBT(structural.getCompoundTagAt(i)));
 
 		if(nbt.hasKey("structuralSummary")) result.structuralSummary = IntelStructuralSummary.readFromNBT(nbt.getCompoundTag("structuralSummary"));
+		if(result.mode == IntelScanMode.COMBINED && nbt.hasKey("projection")) result.projection = IntelProjection.readFromNBT(nbt.getCompoundTag("projection"));
 		if(result.mode != IntelScanMode.COMBINED) {
 			// Older scans could label launch hardware in the general terrain passes.
 			for(IntelFinding finding : result.findings) {
