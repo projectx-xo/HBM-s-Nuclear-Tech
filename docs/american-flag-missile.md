@@ -1,6 +1,6 @@
-# American flag size 20 missile
+# American-themed size 20 missile
 
-The set adds a **Size 20 Thermonuclear Bunker Buster Warhead** and American Flag variants of the size 20 solid-fuel fuselage, fins, and solid-fuel thruster. All four parts appear in the missile creative tab. The tab also includes a complete **Stars and Stripes** missile with a guidance chip and the four matching parts.
+The set adds a **Size 20 Thermonuclear Bunker Buster Warhead** and American-themed variants of the size 20 solid-fuel fuselage, fins, and solid-fuel thruster. All four parts appear in the missile creative tab. The tab also includes a complete **American Bunker Buster** missile with a guidance chip and the four matching parts.
 
 | Part | Item registry name |
 | --- | --- |
@@ -33,6 +33,6 @@ Assemble the painted parts and a guidance chip in the missile assembly machine.
 
 ## Artwork and installation
 
-The flag wraps every component. The fuselage uses a vertical flag layout to avoid stretching the stars on the long cylinder. All models retain their existing dimensions and geometry. The texture is rendered from the included `american_flag.svg`, with exactly 50 stars and 13 stripes.
+The set uses the centered Minuteman artwork: a mostly white fuselage with navy Air Force lettering and insignia, white fins, a metallic thruster, and a small US flag on each side of the white payload. The models retain their existing dimensions. Item registry names are preserved, so existing parts and assembled missiles receive the revised appearance when the mod is updated.
 
-Install `tjHBM-NTM-v1.5.jar` on both client and server, replacing the previous HBM JAR. A resource pack alone cannot add the payload behavior or registered parts. Model previews are external renders, not Minecraft screenshots.
+Install `tjHBM-NTM-v1.6.jar` on both client and server, replacing the previous HBM JAR. A resource pack alone cannot add the payload behavior or registered parts. Model previews are external renders, not Minecraft screenshots.

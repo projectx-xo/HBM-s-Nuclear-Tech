@@ -1312,10 +1312,6 @@ public class ResourceManager {
 	public static final IModelCustom mp_s_15_soyuz = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_s_15_soyuz.obj"));
 	public static final IModelCustom mp_s_20 = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_s_20.obj"));
 	public static final IModelCustom mp_s_20_white = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_s_20_white.obj"));
-	public static final IModelCustom mp_t_20_american_flag = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_t_20_american_flag.obj"));
-	public static final IModelCustom mp_s_20_american_flag = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_s_20_american_flag.obj"));
-	public static final IModelCustom mp_f_20_american_flag = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_f_20_american_flag.obj"));
-	public static final IModelCustom mp_w_20_american_flag = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_w_20_american_flag.obj"));
 
 	public static final IModelCustom mp_f_10_kerosene = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_f_10_kerosene.obj"));
 	public static final IModelCustom mp_f_10_long_kerosene = AdvancedModelLoader.loadModel(new ResourceLocation(RefStrings.MODID, "models/missile_parts/mp_f_10_long_kerosene.obj"));
@@ -1608,7 +1604,6 @@ public class ResourceManager {
 	public static final ResourceLocation mp_f_15_20_kerosene_magnusson_tex = new ResourceLocation(RefStrings.MODID, "textures/models/missile_parts/fuselages/mp_f_15_20_kerosene_magnusson.png");
 	public static final ResourceLocation mp_f_15_20_solid_tex = new ResourceLocation(RefStrings.MODID, "textures/models/missile_parts/fuselages/mp_f_15_20_solid.png");
 	public static final ResourceLocation mp_f_15_20_solid_minuteman_tex = new ResourceLocation(RefStrings.MODID, "textures/models/missile_parts/fuselages/mp_f_15_20_solid_minuteman.png");
-	public static final ResourceLocation mp_american_flag_tex = new ResourceLocation(RefStrings.MODID, "textures/models/missile_parts/american_flag.png");
 	public static final ResourceLocation mp_w_20_minuteman_tex = new ResourceLocation(RefStrings.MODID, "textures/models/missile_parts/warheads/mp_w_20_minuteman.png");
 
 	public static final ResourceLocation mp_w_10_he_tex = new ResourceLocation(RefStrings.MODID, "textures/models/missile_parts/warheads/mp_w_10_he.png");
