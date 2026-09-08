@@ -713,6 +713,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 			"isOpen",
 			"sendPacket",
 			"broadcast",
+			"nuclearEvents",
 			"intelSetTarget",
 			"intelStartScan",
 			"intelStatus",
@@ -745,6 +746,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 			case ("isOpen"): return isOpen(context, args);
 			case ("sendPacket"): return sendPacket(context, args);
 			case ("broadcast"): return broadcast(context, args);
+			case ("nuclearEvents"): return nuclearEvents(context, args);
 			case ("intelSetTarget"): return intelSetTarget(context, args);
 			case ("intelStartScan"): return intelStartScan(context, args);
 			case ("intelStatus"): return intelStatus(context, args);

@@ -19,4 +19,14 @@ public class SatelliteProjectionCallbackTest {
 		assertTrue(Arrays.asList(station.methods()).contains("intelProjection"));
 		assertSame(reference, station.invoke("intelProjection", null, null));
 	}
+	@Test
+	public void exposesAndDispatchesNuclearEvents() throws Exception {
+		final Object[] events = {true, "epoch", 0, "", 0};
+		TileEntityMachineSatLink station = new TileEntityMachineSatLink() {
+			@Override
+			public Object[] nuclearEvents(Context context, Arguments args) { return events; }
+		};
+		assertTrue(Arrays.asList(station.methods()).contains("nuclearEvents"));
+		assertSame(events, station.invoke("nuclearEvents", null, null));
+	}
 }
