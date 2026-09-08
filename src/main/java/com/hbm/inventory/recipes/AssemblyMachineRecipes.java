@@ -1065,6 +1065,8 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 						new ComparableStack(ModItems.circuit, 24, EnumCircuitType.BASIC),
 						new ComparableStack(ModItems.part_generic, 16, EnumPartType.LDE),
 						new ComparableStack(ModItems.circuit, 1, EnumCircuitType.CONTROLLER)));
+		this.register(new GenericRecipe("ass.nucleardetection").setup(1200, 25000).outputItems(new ItemStack(ModItems.satellite, 1, EnumSatType.NUCLEAR_DETECTION.ordinal()))
+				.inputItems(new ComparableStack(ModItems.satellite, 1, EnumSatType.DETECTOR.ordinal()), new ComparableStack(ModItems.magnetron, 16), new ComparableStack(ModItems.plate_titanium, 16)));
 		this.register(new GenericRecipe("ass.satcomrelay").setup(1_200, 25_000).outputItems(new ItemStack(ModItems.satellite, 1, EnumSatType.SATCOM_RELAY.ordinal()))
 				.inputItems(new OreDictStack(AL.shell(), 16),
 						new ComparableStack(ModItems.photo_panel, 16),

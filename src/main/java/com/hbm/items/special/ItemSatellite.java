@@ -38,6 +38,7 @@ public class ItemSatellite extends ItemEnumMulti implements ISatChip {
 		SUBSURFACE_INTEL,
 		COMBINED_INTEL,
 		SATCOM_RELAY,
+		NUCLEAR_DETECTION,
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class ItemSatellite extends ItemEnumMulti implements ISatChip {
 			String texture = type.name().toLowerCase(java.util.Locale.US);
 			if(type == EnumSatType.SURFACE_RECON || type == EnumSatType.COMBINED_INTEL) texture = "spy";
 			if(type == EnumSatType.SUBSURFACE_INTEL) texture = "scanner";
-			if(type == EnumSatType.SATCOM_RELAY) texture = "detector";
+			if(type == EnumSatType.SATCOM_RELAY || type == EnumSatType.NUCLEAR_DETECTION) texture = "detector";
 			this.icons[type.ordinal()] = reg.registerIcon(this.getIconString() + "." + texture);
 		}
 	}
@@ -59,6 +60,7 @@ public class ItemSatellite extends ItemEnumMulti implements ISatChip {
 		if(type == EnumSatType.SURFACE_RECON) return "Surface Reconnaissance Satellite";
 		if(type == EnumSatType.SUBSURFACE_INTEL) return "Subsurface Intelligence Satellite";
 		if(type == EnumSatType.COMBINED_INTEL) return "Combined Intelligence Satellite";
+		if(type == EnumSatType.NUCLEAR_DETECTION) return "Nuclear Detection Satellite";
 		return super.getItemStackDisplayName(stack);
 	}
 

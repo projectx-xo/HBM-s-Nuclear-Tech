@@ -472,6 +472,15 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 		return new Object[] {};
 	}
 
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] nuclearEvents(Context context, Arguments args) {
+		if(worldObj == null || worldObj.isRemote || !connected
+				|| !(SatelliteSavedData.getData(worldObj).getSatFromFreq(freq) instanceof com.hbm.saveddata.satellites.SatelliteNuclearDetection))
+			return new Object[] {false, "NUCLEAR_SATELLITE_REQUIRED"};
+		return com.hbm.saveddata.satellites.SatelliteNuclearDetection.poll(worldObj,args.checkString(0),args.checkInteger(1));
+	}
+
 	@Callback(direct = true, doc = "function():number -- Gets satellite frequency")
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] getFreq(Context context, Arguments args) {

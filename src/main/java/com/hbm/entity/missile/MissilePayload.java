@@ -4,7 +4,7 @@ import com.hbm.items.weapon.ItemCustomMissilePart.WarheadType;
 import com.hbm.tileentity.machine.TileEntityMachineRadarRadome;
 import net.minecraft.entity.Entity;
 
-/** Payload identification available only to the advanced radome. */
+/** Nuclear payload classification shared by the advanced radome and detection satellite. */
 public final class MissilePayload {
 	private MissilePayload() { }
 
@@ -16,6 +16,10 @@ public final class MissilePayload {
 
 	public static String identify(Object radar, Entity entity) {
 		if(!(radar instanceof TileEntityMachineRadarRadome)) return "UNKNOWN";
+		return classify(entity);
+	}
+
+	public static String classify(Entity entity) {
 		if(entity instanceof EntityMissileCustom) return ((EntityMissileCustom) entity).getRadarPayload();
 		if(entity instanceof EntityMissileTier4.EntityMissileMirv) return "THERMONUCLEAR";
 		if(entity instanceof EntityMissileTier4.EntityMissileNuclear

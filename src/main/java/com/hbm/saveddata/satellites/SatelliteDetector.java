@@ -82,6 +82,7 @@ public class SatelliteDetector extends SatelliteBase {
 	public static final double INARRCURACY_HIGH = 500;
 	
 	public static void reportEvent(World world, int lifetime, BurstIntensity intensity, double x, double z) {
+		if(intensity == BurstIntensity.LOW || intensity == BurstIntensity.HIGH) SatelliteNuclearDetection.reportExplosion(world, x, null, z);
 		bursts.add(new RadiationBurst(world, lifetime, intensity, (int) Math.floor(x), (int) Math.floor(z)));
 	}
 	
