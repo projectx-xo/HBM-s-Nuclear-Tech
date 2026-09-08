@@ -664,6 +664,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Optional.Method(modid = "OpenComputers")
 	public String[] methods() {
 		return new String[] {
+				"getInventoryMapping",
 				"verifyMEInterface",
 				"verifyTransposer",
 				"setServiceMode",
@@ -687,6 +688,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] invoke(String method, Context context, Arguments args) throws Exception {
 		switch(method) {
+			case "getInventoryMapping": return getInventoryMapping(context, args);
 			case "verifyMEInterface": return verifyMEInterface(context, args);
 			case "verifyTransposer": return verifyTransposer(context, args);
 			case "setServiceMode": return setServiceMode(context, args);
