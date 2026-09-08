@@ -54,7 +54,10 @@ import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
 @Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")})
-public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISidedInventory, IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IBufPacketReceiver, IRadarCommandReceiver, li.cil.oc.api.network.SimpleComponent, CompatHandler.OCComponent, IFluidHandler {
+public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISidedInventory, IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IBufPacketReceiver, IRadarCommandReceiver, li.cil.oc.api.network.SimpleComponent, CompatHandler.OCComponent, IFluidHandler, com.hbm.compat.teams.TeamAssetHost {
+	private NBTTagCompound teamAssetData = new NBTTagCompound();
+	@Override public NBTTagCompound getTeamAssetData() { return teamAssetData; }
+
 
 	private ItemStack slots[];
 
@@ -496,6 +499,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		teamAssetData = nbt.getCompoundTag("hbmAssetRegistration");
 		service.read(nbt);
 		NBTTagList list = nbt.getTagList("items", 10);
 
@@ -521,6 +525,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		nbt.setTag("hbmAssetRegistration", teamAssetData);
 		service.write(nbt);
 
 		NBTTagList list = new NBTTagList();
@@ -816,5 +821,11 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@SideOnly(Side.CLIENT)
 	public Object provideGUI(int ID, EntityPlayer player, World world, int x, int y, int z) {
 		return new GUIMachineLaunchTable(player.inventory, this);
+	}
+
+	@li.cil.oc.api.machine.Callback
+	@cpw.mods.fml.common.Optional.Method(modid = "OpenComputers")
+	public Object[] getTeamIdentity(li.cil.oc.api.machine.Context context, li.cil.oc.api.machine.Arguments args) {
+		return com.hbm.compat.teams.TeamAssetIdentity.read(this);
 	}
 }

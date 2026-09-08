@@ -38,7 +38,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")})
-public class TileEntityMachineSatLink extends TileEntityTickingBase implements IRORValueProvider, IRORInteractive, SimpleComponent, CompatHandler.OCComponent {
+public class TileEntityMachineSatLink extends TileEntityTickingBase implements IRORValueProvider, IRORInteractive, SimpleComponent, CompatHandler.OCComponent, com.hbm.compat.teams.TeamAssetHost {
+	private NBTTagCompound teamAssetData = new NBTTagCompound();
+	@Override public NBTTagCompound getTeamAssetData() { return teamAssetData; }
+
 
 	private static final int MIN_PORT = 1;
 	private static final int MAX_PORT = 65535;
@@ -187,12 +190,14 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		teamAssetData = nbt.getCompoundTag("hbmAssetRegistration");
 		this.freq = nbt.getInteger("freq");
 	}
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		nbt.setTag("hbmAssetRegistration", teamAssetData);
 		nbt.setInteger("freq", freq);
 	}
 
@@ -753,5 +758,11 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 			case ("intelStructuralSummary"): return intelStructuralSummary(context, args);
 		}
 		throw new NoSuchMethodException();
+	}
+
+	@li.cil.oc.api.machine.Callback
+	@cpw.mods.fml.common.Optional.Method(modid = "OpenComputers")
+	public Object[] getTeamIdentity(li.cil.oc.api.machine.Context context, li.cil.oc.api.machine.Arguments args) {
+		return com.hbm.compat.teams.TeamAssetIdentity.read(this);
 	}
 }

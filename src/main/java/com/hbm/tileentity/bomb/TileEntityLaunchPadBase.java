@@ -60,7 +60,10 @@ import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
 @Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")})
-public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase implements IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IRadarCommandReceiver, SimpleComponent, CompatHandler.OCComponent, IFluidCopiable, IFluidHandler {
+public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase implements IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IRadarCommandReceiver, SimpleComponent, CompatHandler.OCComponent, IFluidCopiable, IFluidHandler, com.hbm.compat.teams.TeamAssetHost {
+	private NBTTagCompound teamAssetData = new NBTTagCompound();
+	@Override public NBTTagCompound getTeamAssetData() { return teamAssetData; }
+
 	
 	/** Automatic instantiation of generic missiles, i.e. everything that both extends EntityMissileBaseNT and needs a designator */
 	public static final HashMap<ComparableStack, Class<? extends EntityMissileBaseNT>> missiles = new HashMap();
@@ -222,6 +225,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		teamAssetData = nbt.getCompoundTag("hbmAssetRegistration");
 		service.read(nbt);
 		power = nbt.getLong("power");
 		tanks[0].readFromNBT(nbt, "t0");
@@ -239,6 +243,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		nbt.setTag("hbmAssetRegistration", teamAssetData);
 		service.write(nbt);
 		nbt.setLong("power", power);
 		tanks[0].writeToNBT(nbt, "t0");
@@ -641,6 +646,12 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 		if(shot != null && !shot.isDead && worldObj.getEntityByID(shot.getEntityId()) != shot) return new Object[] {"UNKNOWN"};
 		return new Object[] {interceptorOutcome(shot, interceptorUuid,
 				worldObj.getEntityByID(targetId), targetId, targetUuid, dimension)};
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getTeamIdentity(Context context, Arguments args) {
+		return com.hbm.compat.teams.TeamAssetIdentity.read(this);
 	}
 
 	@Callback(direct = true)

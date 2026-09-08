@@ -65,7 +65,10 @@ import net.minecraft.world.WorldServer;
  * @author hbm
  */
 @Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")})
-public class TileEntityMachineRadarNT extends TileEntityMachineBase implements IEnergyReceiverMK2, IGUIProvider, IConfigurableMachine, IControlReceiver, SimpleComponent, CompatHandler.OCComponent {
+public class TileEntityMachineRadarNT extends TileEntityMachineBase implements IEnergyReceiverMK2, IGUIProvider, IConfigurableMachine, IControlReceiver, SimpleComponent, CompatHandler.OCComponent, com.hbm.compat.teams.TeamAssetHost {
+	private NBTTagCompound teamAssetData = new NBTTagCompound();
+	@Override public NBTTagCompound getTeamAssetData() { return teamAssetData; }
+
 
 	public boolean scanMissiles = true;
 	public boolean scanShells = true;
@@ -306,6 +309,7 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		teamAssetData = nbt.getCompoundTag("hbmAssetRegistration");
 		this.power = nbt.getLong("power");
 		this.scanMissiles = nbt.getBoolean("scanMissiles");
 		this.scanShells = nbt.getBoolean("scanShells");
@@ -319,6 +323,7 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		nbt.setTag("hbmAssetRegistration", teamAssetData);
 		nbt.setLong("power", power);
 		nbt.setBoolean("scanMissiles", scanMissiles);
 		nbt.setBoolean("scanShells", scanShells);
@@ -758,4 +763,10 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 		throw new NoSuchMethodException();
 	}
 
+
+	@li.cil.oc.api.machine.Callback
+	@cpw.mods.fml.common.Optional.Method(modid = "OpenComputers")
+	public Object[] getTeamIdentity(li.cil.oc.api.machine.Context context, li.cil.oc.api.machine.Arguments args) {
+		return com.hbm.compat.teams.TeamAssetIdentity.read(this);
+	}
 }
