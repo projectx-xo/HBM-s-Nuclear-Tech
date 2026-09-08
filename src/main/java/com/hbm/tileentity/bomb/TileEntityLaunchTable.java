@@ -685,6 +685,12 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@Override public FluidTankInfo[] getTankInfo(ForgeDirection side) { return service.getTankInfo(side); }
 
 	// do some opencomputer stuff
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getInventoryMapping(Context context, Arguments args) {
+		return LaunchPadInventoryMapping.find(this, context, args.checkString(0));
+	}
+
 	@Override
 	@Optional.Method(modid = "OpenComputers")
 	public String getComponentName() {
