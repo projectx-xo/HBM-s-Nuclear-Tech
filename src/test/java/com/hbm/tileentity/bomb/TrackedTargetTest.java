@@ -7,6 +7,21 @@ import com.hbm.entity.missile.EntityMissileAntiBallistic;
 import net.minecraft.entity.Entity;
 
 public class TrackedTargetTest {
+    @Test public void confirmedDestructionIsBoundToExactShotAndTarget() throws Exception {
+        Interceptor abm = new Interceptor(); Target target = new Target();
+        String uuid = target.getUniqueID().toString();
+        String[] names = {"interceptedTargetUuid", "interceptedTargetId", "interceptedDimension"};
+        Object[] values = {uuid, target.getEntityId(), 0};
+        for(int i=0;i<names.length;i++) {
+            java.lang.reflect.Field f=EntityMissileAntiBallistic.class.getDeclaredField(names[i]);
+            f.setAccessible(true);f.set(abm, values[i]);
+        }
+        String shot=abm.getUniqueID().toString();
+        assertEquals("INTERCEPTED", TileEntityLaunchPadBase.interceptorOutcome(abm,shot,null,target.getEntityId(),uuid,0));
+        assertEquals("TARGET_UNAVAILABLE", TileEntityLaunchPadBase.interceptorOutcome(abm,shot,null,target.getEntityId(),"other",0));
+        assertEquals("UNKNOWN", TileEntityLaunchPadBase.interceptorOutcome(abm,"old",null,target.getEntityId(),uuid,0));
+    }
+
     @Test public void missRequiresEndedExactInterceptorAndLivingExactTarget() {
         Interceptor abm = new Interceptor();
         Target target = new Target();

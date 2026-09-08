@@ -31,6 +31,8 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 	private int loadedChunkX = Integer.MIN_VALUE;
 	private int loadedChunkZ = Integer.MIN_VALUE;
 	public Entity tracking;
+	private String interceptedTargetUuid;
+	private int interceptedTargetId, interceptedDimension;
 	public double velocity;
 	protected int activationTimer;
 
@@ -131,6 +133,23 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 		this.tracking = closest;
 	}
 
+	public boolean confirmedIntercept(int id, String uuid, int dimension) {
+		return uuid != null && uuid.equals(interceptedTargetUuid)
+				&& id == interceptedTargetId && dimension == interceptedDimension;
+	}
+
+	private void detonateInterceptor(float strength) {
+		Entity target = tracking;
+		boolean alive = target != null && !target.isDead;
+		this.setDead();
+		ExplosionLarge.explode(worldObj, posX, posY, posZ, strength, true, false, false);
+		if(!worldObj.isRemote && alive && target.isDead) {
+			interceptedTargetUuid = target.getUniqueID().toString();
+			interceptedTargetId = target.getEntityId();
+			interceptedDimension = target.dimension;
+		}
+	}
+
 	/** Predictive targeting system */
 	protected void aimAtTarget() {
 
@@ -140,8 +159,7 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 		Vec3 motion = Vec3.createVectorHelper(predicted.xCoord - posX, predicted.yCoord - posY, predicted.zCoord - posZ).normalize();
 
 		if(delta.lengthVector() < 10 && activationTimer >= 40) {
-			this.setDead();
-			ExplosionLarge.explode(worldObj, posX, posY, posZ, 15F, true, false, false);
+			detonateInterceptor(15F);
 
 		}
 
@@ -153,8 +171,7 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 	@Override
 	protected void onImpact(MovingObjectPosition mop) {
 		if(this.activationTimer >= 40) {
-			this.setDead();
-			ExplosionLarge.explode(worldObj, posX, posY, posZ, 20F, true, false, false);
+			detonateInterceptor(20F);
 		}
 	}
 

@@ -394,7 +394,16 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	}
 	
 	private EntityMissileAntiBallistic trackedInterceptor;
-	private String trackedTargetUuid;
+	private static final class InterceptorRecord {
+		final EntityMissileAntiBallistic shot;
+		final int targetId, dimension;
+		final String targetUuid;
+		InterceptorRecord(EntityMissileAntiBallistic shot, Entity target) {
+			this.shot = shot; targetId = target.getEntityId(); dimension = target.dimension;
+			targetUuid = target.getUniqueID().toString();
+		}
+	}
+	private final java.util.LinkedHashMap<String, InterceptorRecord> interceptorHistory = new java.util.LinkedHashMap<String, InterceptorRecord>();
 
 	public BombReturnCode launchToEntity(Entity entity) {
 		if(!canLaunch()) return BombReturnCode.ERROR_MISSING_COMPONENT;
@@ -406,7 +415,8 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 				EntityMissileAntiBallistic abm = (EntityMissileAntiBallistic) e;
 				abm.tracking = entity;
 				trackedInterceptor = abm;
-				trackedTargetUuid = entity.getUniqueID().toString();
+				interceptorHistory.put(abm.getUniqueID().toString(), new InterceptorRecord(abm, entity));
+				while(interceptorHistory.size() > 64) interceptorHistory.remove(interceptorHistory.keySet().iterator().next());
 			}
 			
 			finalizeLaunch(e);
@@ -606,6 +616,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	public static String interceptorOutcome(EntityMissileAntiBallistic interceptor, String interceptorUuid,
 			Entity target, int targetId, String targetUuid, int dimension) {
 		if(interceptor == null || !interceptor.getUniqueID().toString().equals(interceptorUuid)) return "UNKNOWN";
+		if(interceptor.confirmedIntercept(targetId, targetUuid, dimension)) return "INTERCEPTED";
 		if(!matchesTrackedTarget(target, targetId, targetUuid, dimension)) return "TARGET_UNAVAILABLE";
 		return interceptor.isDead ? "MISS" : "IN_FLIGHT";
 	}
@@ -617,10 +628,12 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 		int targetId = args.checkInteger(1);
 		String targetUuid = args.checkString(2);
 		int dimension = args.checkInteger(3);
-		if(dimension != worldObj.provider.dimensionId || !targetUuid.equals(trackedTargetUuid)) return new Object[] {"UNKNOWN"};
-		if(trackedInterceptor != null && !trackedInterceptor.isDead
-				&& worldObj.getEntityByID(trackedInterceptor.getEntityId()) != trackedInterceptor) return new Object[] {"UNKNOWN"};
-		return new Object[] {interceptorOutcome(trackedInterceptor, interceptorUuid,
+		if(dimension != worldObj.provider.dimensionId) return new Object[] {"UNKNOWN"};
+		InterceptorRecord record = interceptorHistory.get(interceptorUuid);
+		if(record == null || record.targetId != targetId || record.dimension != dimension || !record.targetUuid.equals(targetUuid)) return new Object[] {"UNKNOWN"};
+		EntityMissileAntiBallistic shot = record.shot;
+		if(shot != null && !shot.isDead && worldObj.getEntityByID(shot.getEntityId()) != shot) return new Object[] {"UNKNOWN"};
+		return new Object[] {interceptorOutcome(shot, interceptorUuid,
 				worldObj.getEntityByID(targetId), targetId, targetUuid, dimension)};
 	}
 
