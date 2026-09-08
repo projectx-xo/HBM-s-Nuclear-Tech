@@ -10,7 +10,7 @@ It reports:
 - Complete missile items stored in block inventories.
 - Loaded missile entities in flight, including custom missiles and interceptors, at their scan-time positions.
 
-Multiblock proxy ports are skipped so they do not report the same inventory repeatedly. Explicit targets take precedence over general terrain findings when the 128-finding result limit is reached. No chunks are force-loaded. A launcher whose core is outside the target area is outside this scan; an empty shaft without launch hardware still relies on the existing structural inference.
+Multiblock proxy ports are skipped so they do not report the same inventory repeatedly. Explicit targets take precedence over general terrain findings when the 128-finding result limit is reached. As of v1.18, scans temporarily load their 64 × 64 footprint before sampling; see [scan chunk loading](intelligence-scan-loading.md). A launcher whose core is outside the target area is outside this scan; an empty shaft without launch hardware still relies on the existing structural inference.
 
 Flying missiles are counted once per scan by entity UUID, even if they move between scanned chunks. Flying missiles and stored missile items do not count as installed launch infrastructure when inferring a possible silo.
 

@@ -49,6 +49,8 @@ public class CommandSatellites extends CommandBase {
 			int freq = parseInt(sender, args[1]);
 			SatelliteSavedData data = SatelliteSavedData.getData(sender.getEntityWorld());
 			if(data.sats.containsKey(freq)) {
+				if(data.sats.get(freq) instanceof com.hbm.saveddata.satellites.SatelliteIntelligenceBase)
+					((com.hbm.saveddata.satellites.SatelliteIntelligenceBase)data.sats.get(freq)).cancelScan();
 				data.sats.remove(freq);
 				data.markDirty();
 				sender.addChatMessage(new ChatComponentTranslation("commands.satellite.satellite_descended").setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GREEN)));

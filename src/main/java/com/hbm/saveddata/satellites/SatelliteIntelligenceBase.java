@@ -12,6 +12,7 @@ import com.hbm.saveddata.satellites.intel.IntelTargetDetector;
 import com.hbm.saveddata.satellites.intel.IntelTargetScanner;
 import com.hbm.saveddata.satellites.intel.IntelProjectionScanner;
 
+import com.hbm.saveddata.satellites.intel.IntelScanChunks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
@@ -34,6 +35,8 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	protected final IntelTargetScanner targetScanner = new IntelTargetScanner();
 	protected final IntelProjectionScanner projectionScanner = new IntelProjectionScanner();
 
+	private IntelScanChunks scanChunks;
+	private int scanTicks;
 	public IntelScanJob activeJob;
 	public IntelScanResult activeResult;
 	public IntelScanResult lastResult;
@@ -68,6 +71,8 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		result.totalColumns = SCAN_SIZE * SCAN_SIZE;
 		if(result.mode == IntelScanMode.COMBINED) activeJob.totalWork += targetScanner.getChunkCount(result) + SCAN_SIZE * SCAN_SIZE;
 		activeResult = result;
+		scanChunks = new IntelScanChunks(world, targetX, targetZ);
+		scanTicks = 0;
 		markDirty();
 		return true;
 	}
@@ -142,6 +147,8 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	protected void processScanTick(World world) {
 		if(world == null || world.isRemote || activeJob == null || activeResult == null) return;
 		try {
+			if(++scanTicks > 6000) { failScan("SCAN_TIMEOUT"); return; }
+			if(scanChunks != null && !scanChunks.tick()) return;
 			if(getScanMode() == IntelScanMode.SURFACE) {
 				surfaceScanner.process(world, activeJob, activeResult, WORK_BUDGET_PER_TICK);
 				if(activeJob.phaseCursor >= SCAN_SIZE * SCAN_SIZE) finishOrFail(world);
@@ -203,7 +210,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 				}
 			}
 		} catch(Throwable t) {
-			failScan(t.getClass().getSimpleName());
+			failScan(t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage());
 		}
 	}
 
@@ -220,6 +227,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	}
 
 	protected void completeScan(World world) {
+		if(scanChunks != null) { scanChunks.close(); scanChunks = null; }
 		if(activeResult != null) {
 			activeResult.completedAt = world.getTotalWorldTime();
 			lastResult = activeResult;
@@ -233,6 +241,8 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 	}
 
 	protected void failScan(String error) {
+		if(scanChunks != null) { scanChunks.close(); scanChunks = null; }
+		tx = error == null ? "ERROR" : error;
 		if(activeJob != null) {
 			activeJob.state = IntelScanState.ERROR;
 			activeJob.error = error == null ? "ERROR" : error;
@@ -242,6 +252,8 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 		activeResult = null;
 		markDirty();
 	}
+
+	public void cancelScan() { if(activeJob != null || scanChunks != null) failScan("CANCELLED"); }
 
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
@@ -260,6 +272,7 @@ public abstract class SatelliteIntelligenceBase extends SatelliteBase {
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
+		cancelScan();
 		// Likewise, do not call the inverted base readFromNBT, which writes defaults
 		// back into the tag being loaded. Intelligence satellites own their persisted
 		// target/status/result data under the intel* keys below.

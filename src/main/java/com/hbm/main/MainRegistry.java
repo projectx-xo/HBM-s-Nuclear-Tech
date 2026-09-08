@@ -348,6 +348,10 @@ public class MainRegistry {
 			public void ticketsLoaded(List<Ticket> tickets, World world) {
 				for(Ticket ticket : tickets) {
 
+					if(ticket.getModData().getBoolean(com.hbm.saveddata.satellites.intel.IntelScanChunks.TICKET_KEY)) {
+						ForgeChunkManager.releaseTicket(ticket);
+						continue;
+					}
 					if(ticket.getEntity() instanceof IChunkLoader) {
 						((IChunkLoader) ticket.getEntity()).init(ticket);
 					}
