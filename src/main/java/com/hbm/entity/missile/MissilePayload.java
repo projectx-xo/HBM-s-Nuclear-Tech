@@ -11,6 +11,7 @@ public final class MissilePayload {
 	public static String classifyWarhead(WarheadType type) {
 		if(type == WarheadType.NUCLEAR) return "NUCLEAR";
 		if(type == WarheadType.TX || type == WarheadType.BUSTER_THERMONUCLEAR) return "THERMONUCLEAR";
+		if(type == WarheadType.HE || type == WarheadType.INC || type == WarheadType.BUSTER || type == WarheadType.CLUSTER || type == WarheadType.BUSTER_PENETRATING) return "CONVENTIONAL";
 		return "UNKNOWN";
 	}
 
@@ -25,6 +26,8 @@ public final class MissilePayload {
 		if(entity instanceof EntityMissileTier4.EntityMissileNuclear
 				|| entity instanceof EntityMissileTier0.EntityMissileMicro
 				|| entity instanceof EntityMissileTier4.EntityMissileDoomsday) return "NUCLEAR";
+		if((entity instanceof EntityMissileTier1 && !(entity instanceof EntityMissileTier1.EntityMissileDecoy))
+				|| entity instanceof EntityMissileTier2 || entity instanceof EntityMissileTier3) return "CONVENTIONAL";
 		return "UNKNOWN";
 	}
 }

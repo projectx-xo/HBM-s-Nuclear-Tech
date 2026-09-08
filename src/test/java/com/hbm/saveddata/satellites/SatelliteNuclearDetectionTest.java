@@ -32,4 +32,10 @@ public class SatelliteNuclearDetectionTest {
 		j.add("MISSILE","NUCLEAR",Double.NaN,2D,3,0,12200);
 		assertEquals(300,j.page((String)page[1],300,12200)[2]);
 	}
+	@Test public void conventionalWarheadsAreExplicitAndSpecialsStayUnknown() {
+		assertEquals("CONVENTIONAL", com.hbm.entity.missile.MissilePayload.classifyWarhead(com.hbm.items.weapon.ItemCustomMissilePart.WarheadType.HE));
+		assertEquals("NUCLEAR", com.hbm.entity.missile.MissilePayload.classifyWarhead(com.hbm.items.weapon.ItemCustomMissilePart.WarheadType.NUCLEAR));
+		assertEquals("THERMONUCLEAR", com.hbm.entity.missile.MissilePayload.classifyWarhead(com.hbm.items.weapon.ItemCustomMissilePart.WarheadType.TX));
+		assertEquals("UNKNOWN", com.hbm.entity.missile.MissilePayload.classifyWarhead(com.hbm.items.weapon.ItemCustomMissilePart.WarheadType.CUSTOM0));
+	}
 }

@@ -40,7 +40,7 @@ public class SatelliteNuclearDetection extends SatelliteBase {
 				Entity entity=(Entity)object;
 				if(entity.isDead)continue;
 				String payload=MissilePayload.classify(entity);
-				if("UNKNOWN".equals(payload))continue;
+				if(!"NUCLEAR".equals(payload) && !"THERMONUCLEAR".equals(payload))continue;
 				String id=entity.getUniqueID().toString();
 				Long seen=j.missiles.get(id);
 				if(seen==null || now-seen>12000 || now<seen) j.add("MISSILE",payload,entity.posX,entity.posY,entity.posZ,world.provider.dimensionId,now);
