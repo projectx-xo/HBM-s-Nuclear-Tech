@@ -13,23 +13,24 @@ public final class IntelProjectionBlockAccess implements IBlockAccess {
 	private final Block[] palette;
 	private final int floor,cutAxis,cut;
 	private final boolean terrain;
+	private final String layer;
 
 	public IntelProjectionBlockAccess(IntelProjection projection,IntelProjectionView view) {
-		this.projection=projection;floor=view.floor;cutAxis=view.cutAxis;cut=view.cut;terrain=view.terrain;
+		this.projection=projection;layer=view.mode;floor=view.floor;cutAxis=view.cutAxis;cut=view.cut;terrain=view.terrain;
 		palette=new Block[projection.blockPalette.size()+1];palette[0]=Blocks.air;
 		for(int i=1;i<palette.length;i++) {
 			Block b=Block.getBlockFromName(projection.blockPalette.get(i-1));palette[i]=b==null?Blocks.air:b;
 		}
 	}
 	public boolean visible(int x,int y,int z) {
-		return y<=floor && projection.mask(x,y,z)!=0 && (terrain || !projection.natural(x,y,z))
+		return y<=floor && projection.mask(x,y,z)!=0 && projection.inLayer(layer,x,y,z) && (terrain || !projection.natural(x,y,z))
 				&& (cutAxis!=0 || projection.originX+x<=cut) && (cutAxis!=2 || projection.originZ+z<=cut);
 	}
 	@Override public Block getBlock(int x,int y,int z) {
 		return visible(x,y,z)?palette[projection.blockState(x,y,z)>>>4]:Blocks.air;
 	}
 	@Override public int getBlockMetadata(int x,int y,int z) { return visible(x,y,z)?projection.metadata(x,y,z):0; }
-	public boolean opaque(int x,int y,int z) { Block b=getBlock(x,y,z);return b!=null && b.isOpaqueCube(); }
+	public boolean opaque(int x,int y,int z) { Block b=getBlock(x,y,z);return !projection.modelCell(x,y,z) && b!=null && b.isOpaqueCube(); }
 	public boolean enclosed(int x,int y,int z) {
 		return opaque(x-1,y,z) && opaque(x+1,y,z) && opaque(x,y-1,z) && opaque(x,y+1,z) && opaque(x,y,z-1) && opaque(x,y,z+1);
 	}

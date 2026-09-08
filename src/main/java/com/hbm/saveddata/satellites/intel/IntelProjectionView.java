@@ -3,24 +3,30 @@ package com.hbm.saveddata.satellites.intel;
 import net.minecraft.nbt.NBTTagCompound;
 
 public final class IntelProjectionView {
-	public String mode="exterior";
+	public String mode="combined";
 	public int floor=255, cutAxis=-1, cut, selected;
 	public float rotation, size=6;
 	public boolean terrain;
 
 	public void configure(String action,String value,IntelProjection p,int findings) {
 		if("view".equals(action)) {
-			if(!"exterior".equals(value) && !"interior".equals(value) && !"cutaway".equals(value))
-				throw new IllegalArgumentException("Use exterior, interior or cutaway");
-			mode=value; floor="interior".equals(value)?Math.max(0,p.maxY-1):255;
-			cutAxis="cutaway".equals(value)?2:-1; cut=p.originZ+(p.minZ+p.maxZ)/2;
+			// Preserve old computer scripts, while keeping the layer independent of inspection cuts.
+			if("exterior".equals(value) || "interior".equals(value) || "cutaway".equals(value)) {
+				mode="combined";floor="interior".equals(value)?Math.max(0,p.maxY-1):255;
+				cutAxis="cutaway".equals(value)?2:-1;cut=p.originZ+(p.minZ+p.maxZ)/2;
+			} else {
+				if(!"surface".equals(value) && !"subsurface".equals(value) && !"combined".equals(value))
+					throw new IllegalArgumentException("Use surface, subsurface or combined");
+				mode=value;floor=255;cutAxis=-1;terrain=false;
+			}
+			selected=0;
 		} else if("floor".equals(action)) {
-			floor="all".equals(value)?255:integer(value,0,255); mode="interior";
+			floor="all".equals(value)?255:integer(value,0,255);
 		} else if("cut".equals(action)) {
 			if("none".equals(value)) { cutAxis=-1; return; }
 			if(!value.matches("[xz]:-?[0-9]+")) throw new IllegalArgumentException("Use x:coordinate, z:coordinate or none");
 			int coordinate=integer(value.substring(2),-30000000,30000000);
-			cutAxis=value.charAt(0)=='x'?0:2; cut=coordinate; mode="cutaway";
+			cutAxis=value.charAt(0)=='x'?0:2; cut=coordinate;
 		} else if("select".equals(action)) selected="all".equals(value)?0:integer(value,1,findings);
 		else if("rotate".equals(action)) rotation=integer(value,-360,360);
 		else if("scale".equals(action)) size=integer(value,2,12);
@@ -39,7 +45,9 @@ public final class IntelProjectionView {
 		n.setInteger("selected",selected);n.setFloat("rotation",rotation);n.setFloat("size",size);n.setBoolean("terrain",terrain);
 	}
 	public void read(NBTTagCompound n) {
-		mode=n.getString("view");floor=Math.max(0,Math.min(255,n.getInteger("floor")));
+		mode=n.getString("view");
+		if(!"surface".equals(mode) && !"subsurface".equals(mode)) mode="combined";
+		floor=Math.max(0,Math.min(255,n.getInteger("floor")));
 		cutAxis=n.getInteger("cutAxis");if(cutAxis!=0 && cutAxis!=2) cutAxis=-1;
 		cut=n.getInteger("cut");selected=Math.max(0,Math.min(128,n.getInteger("selected")));
 		rotation=n.getFloat("rotation");if(!Float.isFinite(rotation)) rotation=0;

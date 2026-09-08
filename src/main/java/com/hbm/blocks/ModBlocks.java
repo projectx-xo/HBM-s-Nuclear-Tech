@@ -822,6 +822,8 @@ public class ModBlocks {
 
 	public static Block trapdoor_steel;
 
+	public static Block[] propellant_tanks = new Block[3];
+	public static Block[] propellant_tanks_creative = new Block[com.hbm.tileentity.machine.storage.TileEntityPropellantTank.FUEL_NAMES.length];
 	public static Block barrel_plastic;
 	public static Block barrel_corroded;
 	public static Block barrel_steel;
@@ -1009,6 +1011,7 @@ public class ModBlocks {
 
 	public static Block machine_radar;
 	public static Block machine_radar_large;
+	public static Block machine_radar_radome;
 	public static Block radar_screen;
 
 	public static Block machine_turbofan;
@@ -1938,6 +1941,9 @@ public class ModBlocks {
 
 		trapdoor_steel = new BlockNTMTrapdoor(Material.iron).setBlockName("trapdoor_steel").setHardness(3F).setResistance(8.0F).setStepSound(Block.soundTypeMetal).setCreativeTab(MainRegistry.blockTab).setBlockTextureName(RefStrings.MODID + ":trapdoor_steel");
 
+		com.hbm.tileentity.machine.storage.TileEntityPropellantTank.registerForgeFluids();
+		for(int i = 0; i < propellant_tanks.length; i++) propellant_tanks[i] = new BlockPropellantTank(i, -1).setBlockName("propellant_tank_" + (i + 1)).setHardness(3F).setResistance(15F).setStepSound(Block.soundTypeMetal).setCreativeTab(MainRegistry.machineTab).setBlockTextureName("hbm:block_aluminium");
+		for(int i = 0; i < propellant_tanks_creative.length; i++) propellant_tanks_creative[i] = new BlockPropellantTank(2, i).setBlockName("propellant_tank_creative_" + com.hbm.tileentity.machine.storage.TileEntityPropellantTank.FUEL_NAMES[i]).setBlockUnbreakable().setResistance(6000000F).setStepSound(Block.soundTypeMetal).setCreativeTab(MainRegistry.machineTab).setBlockTextureName("hbm:block_aluminium");
 		barrel_plastic = new BlockFluidBarrel(Material.iron, 12000).setBlockName("barrel_plastic").setStepSound(Block.soundTypeStone).setHardness(2.0F).setResistance(5.0F).setCreativeTab(MainRegistry.machineTab).setBlockTextureName(RefStrings.MODID + ":barrel_plastic");
 		barrel_corroded = new BlockFluidBarrel(Material.iron, 6000).setBlockName("barrel_corroded").setStepSound(Block.soundTypeMetal).setHardness(2.0F).setResistance(5.0F).setCreativeTab(null).setBlockTextureName(RefStrings.MODID + ":barrel_corroded");
 		barrel_steel = new BlockFluidBarrel(Material.iron, 16000).setBlockName("barrel_steel").setStepSound(Block.soundTypeMetal).setHardness(2.0F).setResistance(5.0F).setCreativeTab(MainRegistry.machineTab).setBlockTextureName(RefStrings.MODID + ":barrel_steel");
@@ -2078,6 +2084,7 @@ public class ModBlocks {
 		launch_pad_rusted = new LaunchPadRusted(Material.iron).setBlockName("launch_pad_rusted").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.missileTab).setBlockTextureName(RefStrings.MODID + ":block_rust");
 		launch_pad_large = new LaunchPadLarge(Material.iron).setBlockName("launch_pad_large").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.missileTab).setBlockTextureName(RefStrings.MODID + ":block_steel");
 		machine_radar = new MachineRadar(Material.iron).setBlockName("machine_radar").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.missileTab).setBlockTextureName(RefStrings.MODID + ":machine_radar");
+		machine_radar_radome = new com.hbm.blocks.machine.MachineRadarRadome(Material.iron).setBlockName("machine_radar_radome").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.missileTab).setBlockTextureName(RefStrings.MODID + ":block_steel");
 		machine_radar_large = new MachineRadarLarge(Material.iron).setBlockName("machine_radar_large").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.missileTab).setBlockTextureName(RefStrings.MODID + ":block_steel");
 		radar_screen = new MachineRadarScreen(Material.iron).setBlockName("radar_screen").setHardness(5.0F).setResistance(10.0F).setCreativeTab(MainRegistry.missileTab).setBlockTextureName(RefStrings.MODID + ":block_steel");
 
@@ -3218,6 +3225,8 @@ public class ModBlocks {
 		GameRegistry.registerBlock(ladder_steel, ladder_steel.getUnlocalizedName());
 		GameRegistry.registerBlock(trapdoor_steel, trapdoor_steel.getUnlocalizedName());
 
+		for(Block tank : propellant_tanks) register(tank);
+		for(Block tank : propellant_tanks_creative) register(tank);
 		register(barrel_plastic);
 		register(barrel_corroded);
 		register(barrel_steel);
@@ -3422,6 +3431,7 @@ public class ModBlocks {
 		GameRegistry.registerBlock(soyuz_capsule, soyuz_capsule.getUnlocalizedName());
 		GameRegistry.registerBlock(crate_supply, crate_supply.getUnlocalizedName());
 		GameRegistry.registerBlock(machine_radar, machine_radar.getUnlocalizedName());
+		GameRegistry.registerBlock(machine_radar_radome, machine_radar_radome.getUnlocalizedName());
 		GameRegistry.registerBlock(machine_radar_large, machine_radar_large.getUnlocalizedName());
 		GameRegistry.registerBlock(radar_screen, radar_screen.getUnlocalizedName());
 

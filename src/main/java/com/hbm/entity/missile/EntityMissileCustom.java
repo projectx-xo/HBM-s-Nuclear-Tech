@@ -282,6 +282,14 @@ public class EntityMissileCustom extends EntityMissileBaseNT implements IChunkLo
 		return IRadarDetectableNT.TIER1;
 	}
 
+	public String getRadarPayload() {
+		Item item = Item.getItemById(this.dataWatcher.getWatchableObjectInt(9));
+		if(!(item instanceof ItemCustomMissilePart)) return "UNKNOWN";
+		Object[] attributes = ((ItemCustomMissilePart) item).attributes;
+		if(attributes == null || attributes.length == 0 || !(attributes[0] instanceof WarheadType)) return "UNKNOWN";
+		return MissilePayload.classifyWarhead((WarheadType) attributes[0]);
+	}
+
 	@Override public List<ItemStack> getDebris() { return new ArrayList(); }
 	@Override public ItemStack getDebrisRareDrop() { return null; }
 

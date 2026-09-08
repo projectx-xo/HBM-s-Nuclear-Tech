@@ -61,6 +61,11 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 	@Override
 	public void registerDefaults() {
 		boolean no528 = !GeneralConfig.enable528;
+		for(int tier = 0; tier < ModBlocks.propellant_tanks.length; tier++) {
+			this.register(new GenericRecipe("ass.propellant_tank_" + (tier + 1)).setup(600 * (tier + 1), 100)
+					.outputItems(new ItemStack(ModBlocks.propellant_tanks[tier]))
+					.inputItems(new OreDictStack(STEEL.plate(), 16 * (tier + 1)), new OreDictStack(STEEL.pipe(), 4 * (tier + 1)), new ComparableStack(ModBlocks.barrel_tcalloy, 4 * (1 << tier))));
+		}
 
 		// plates and ingots
 		String autoPlate = "autoswitch.plates";
@@ -395,6 +400,8 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 		this.register(new GenericRecipe("ass.radarlarge").setup(400, 100).outputItems(new ItemStack(ModBlocks.machine_radar_large, 1))
 				.inputItems(new OreDictStack(STEEL.plateWelded(), 6), new OreDictStack(ANY_RESISTANTALLOY.ingot(), 4), new OreDictStack(ANY_RUBBER.ingot(), 24), new ComparableStack(ModItems.magnetron, 16), new ComparableStack(ModItems.motor_desh, 1), new ComparableStack(ModItems.circuit, 4, EnumCircuitType.ADVANCED), new ComparableStack(ModItems.crt_display, 4))
 				.inputItemsEx(new ComparableStack(ModItems.item_expensive, 4, EnumExpensiveType.HEAVY_FRAME), new OreDictStack(ANY_RESISTANTALLOY.ingot(), 8), new OreDictStack(ANY_RUBBER.ingot(), 24), new ComparableStack(ModItems.magnetron, 16), new ComparableStack(ModItems.motor_desh, 3), new ComparableStack(ModItems.item_expensive, 6, EnumExpensiveType.CIRCUIT), new ComparableStack(ModItems.crt_display, 4)));
+		this.register(new GenericRecipe("ass.radome").setup(600, 200).outputItems(new ItemStack(ModBlocks.machine_radar_radome))
+				.inputItems(new ComparableStack(ModBlocks.machine_radar_large, 1), new OreDictStack(STEEL.plateWelded(), 12), new ComparableStack(ModItems.magnetron, 24), new ComparableStack(ModItems.circuit, 8, EnumCircuitType.ADVANCED), new OreDictStack(ANY_RUBBER.ingot(), 32)));
 		this.register(new GenericRecipe("ass.forcefield").setup(600, 100).outputItems(new ItemStack(ModBlocks.machine_forcefield, 1))
 				.inputItems(new OreDictStack(DURA.plate(), 8), new ComparableStack(ModItems.plate_desh, 4), new ComparableStack(ModItems.coil_gold_torus, 6), new ComparableStack(ModItems.coil_magnetized_tungsten, 12), new ComparableStack(ModItems.motor, 1), new ComparableStack(ModItems.upgrade_radius, 1), new ComparableStack(ModItems.upgrade_health, 1), new ComparableStack(ModItems.circuit, 4, EnumCircuitType.ADVANCED), new ComparableStack(ModBlocks.machine_transformer, 1)));
 		this.register(new GenericRecipe("ass.strandcaster").setup(200, 100).outputItems(new ItemStack(ModBlocks.machine_strand_caster, 1))
@@ -1058,6 +1065,12 @@ public class AssemblyMachineRecipes extends GenericRecipes<GenericRecipe> {
 						new ComparableStack(ModItems.circuit, 24, EnumCircuitType.BASIC),
 						new ComparableStack(ModItems.part_generic, 16, EnumPartType.LDE),
 						new ComparableStack(ModItems.circuit, 1, EnumCircuitType.CONTROLLER)));
+		this.register(new GenericRecipe("ass.satcomrelay").setup(1_200, 25_000).outputItems(new ItemStack(ModItems.satellite, 1, EnumSatType.SATCOM_RELAY.ordinal()))
+				.inputItems(new OreDictStack(AL.shell(), 16),
+						new ComparableStack(ModItems.photo_panel, 16),
+						new ComparableStack(ModItems.circuit, 24, EnumCircuitType.ADVANCED),
+						new ComparableStack(ModItems.part_generic, 16, EnumPartType.LDE),
+						new ComparableStack(ModItems.circuit, 1, EnumCircuitType.CONTROLLER_ADVANCED)));
 		this.register(new GenericRecipe("ass.detectorsat").setup(1_200, 25_000).outputItems(new ItemStack(ModItems.satellite, 1, EnumSatType.DETECTOR.ordinal()))
 				.inputItems(new OreDictStack(GOLD.plateCast(), 16),
 						new ComparableStack(ModItems.photo_panel, 64),

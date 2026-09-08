@@ -101,6 +101,7 @@ public class IntelTargetDetector implements IntelTargetScanner.TargetAccess {
 			case "hbm:tile.silo_hatch":
 			case "hbm:tile.silo_hatch_large": return "SILO_HATCH";
 			case "hbm:tile.machine_radar":
+			case "hbm:tile.machine_radar_radome":
 			case "hbm:tile.machine_radar_large": return "RADAR";
 			case "hbm:tile.machine_missile_assembly": return "MISSILE_ASSEMBLY";
 			default: return "";

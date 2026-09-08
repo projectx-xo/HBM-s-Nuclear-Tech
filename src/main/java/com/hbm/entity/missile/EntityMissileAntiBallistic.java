@@ -28,6 +28,8 @@ import net.minecraftforge.common.ForgeChunkManager.Type;
 public class EntityMissileAntiBallistic extends EntityThrowableInterp implements IChunkLoader, IRadarDetectable, IRadarDetectableNT {
 
 	private Ticket loaderTicket;
+	private int loadedChunkX = Integer.MIN_VALUE;
+	private int loadedChunkZ = Integer.MIN_VALUE;
 	public Entity tracking;
 	public double velocity;
 	protected int activationTimer;
@@ -43,7 +45,6 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 	@Override
 	protected void entityInit() {
 		super.entityInit();
-		init(ForgeChunkManager.requestTicket(MainRegistry.instance, worldObj, Type.ENTITY));
 	}
 
 	@Override
@@ -58,6 +59,10 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 
 	@Override
 	public void onUpdate() {
+		if(!worldObj.isRemote && loaderTicket == null) {
+			init(ForgeChunkManager.requestTicket(MainRegistry.instance, worldObj, Type.ENTITY));
+		}
+
 		super.onUpdate();
 
 		if(!worldObj.isRemote) {
@@ -202,17 +207,29 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 
 	public void loadNeighboringChunks(int newChunkX, int newChunkZ) {
 		if(!worldObj.isRemote && loaderTicket != null) {
+			if(loadedChunkX == newChunkX && loadedChunkZ == newChunkZ) return;
 
-			for(ChunkCoordIntPair chunk : ImmutableSet.copyOf(loaderTicket.getChunkList())) {
-				ForgeChunkManager.unforceChunk(loaderTicket, chunk);
-			}
-
+			final Ticket ticket = loaderTicket;
 			loadedChunks.clear();
-			for(int i = -1; i <= 1; i++) for(int j = -1; j <= 1; j++) loadedChunks.add(new ChunkCoordIntPair(newChunkX + i, newChunkZ + j));
+			loadedChunks.addAll(MissileChunkLoading.moveTo(newChunkX, newChunkZ, ImmutableSet.copyOf(ticket.getChunkList()), new MissileChunkLoading.Operations() {
+				@Override
+				public void force(ChunkCoordIntPair chunk) {
+					ForgeChunkManager.forceChunk(ticket, chunk);
+				}
 
-			for(ChunkCoordIntPair chunk : loadedChunks) {
-				ForgeChunkManager.forceChunk(loaderTicket, chunk);
-			}
+				@Override
+				public void load(ChunkCoordIntPair chunk) {
+					worldObj.getChunkFromChunkCoords(chunk.chunkXPos, chunk.chunkZPos);
+				}
+
+				@Override
+				public void unforce(ChunkCoordIntPair chunk) {
+					ForgeChunkManager.unforceChunk(ticket, chunk);
+				}
+			}));
+
+			loadedChunkX = newChunkX;
+			loadedChunkZ = newChunkZ;
 		}
 	}
 
@@ -226,6 +243,9 @@ public class EntityMissileAntiBallistic extends EntityThrowableInterp implements
 		if(!worldObj.isRemote && loaderTicket != null) {
 			ForgeChunkManager.releaseTicket(loaderTicket);
 			this.loaderTicket = null;
+			this.loadedChunkX = Integer.MIN_VALUE;
+			this.loadedChunkZ = Integer.MIN_VALUE;
+			this.loadedChunks.clear();
 		}
 	}
 

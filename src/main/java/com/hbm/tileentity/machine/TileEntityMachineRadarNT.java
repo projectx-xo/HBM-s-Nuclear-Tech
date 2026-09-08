@@ -357,6 +357,7 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 
 					RadarEntry entry = converter.apply(new Triplet(e, this, params));
 					if(entry != null) {
+						entry.entityUuid = e.getUniqueID().toString();
 						this.entries.add(entry);
 						break;
 					}
@@ -577,7 +578,13 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 			Entity e = x.getX();
 			if(e instanceof IRadarDetectableNT) {
 				IRadarDetectableNT detectable = (IRadarDetectableNT) e;
-				if(detectable.canBeSeenBy(x.getY()) && detectable.paramsApplicable(x.getZ())) return new RadarEntry(detectable, e, detectable.suppliesRedstone(x.getZ()));
+				if(detectable.canBeSeenBy(x.getY()) && detectable.paramsApplicable(x.getZ())) {
+					RadarEntry entry = new RadarEntry(detectable, e, detectable.suppliesRedstone(x.getZ()));
+					String payload = com.hbm.entity.missile.MissilePayload.identify(x.getY(), e);
+					if("NUCLEAR".equals(payload)) entry.unlocalizedName = "radar.target.payload_nuclear";
+					if("THERMONUCLEAR".equals(payload)) entry.unlocalizedName = "radar.target.payload_thermonuclear";
+					return entry;
+				}
 			}
 			return null;
 		});
@@ -585,7 +592,7 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 		converters.add(x -> {
 			Entity e = x.getX();
 			RadarScanParams params = x.getZ();
-			if(e instanceof IRadarDetectable && params.scanMissiles) {
+			if(e instanceof IRadarDetectable && !(e instanceof IRadarDetectableNT) && params.scanMissiles) {
 				return new RadarEntry((IRadarDetectable) e, e);
 			}
 			return null;
@@ -682,6 +689,21 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 		return new Object[]{false, e.posX, e.posY, e.posZ, type};
 	}
 
+	/** Atomic contact snapshot with a world-scoped identity for an ABM handoff. */
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getTrackedEntityAtIndex(Context context, Arguments args) {
+		int index = args.checkInteger(0) - 1;
+		if(index < 0 || index >= entries.size()) return new Object[] {null, "NO_TARGET"};
+		RadarEntry entry = entries.get(index);
+		Entity entity = worldObj.getEntityByID(entry.entityID);
+		if(entity == null || entity.isDead || entity.dimension != entry.dim
+				|| !entity.getUniqueID().toString().equals(entry.entityUuid)) return new Object[] {null, "TARGET_LOST"};
+		return new Object[] {entry.blipLevel == IRadarDetectableNT.PLAYER, entity.posX, entity.posY, entity.posZ,
+				entry.blipLevel, entry.unlocalizedName, entity.getEntityId(), entity.getUniqueID().toString(), entity.dimension,
+				com.hbm.entity.missile.MissilePayload.identify(this, entity)};
+	}
+
 	@Callback(direct = true)
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] getPos(Context context, Arguments args) {
@@ -701,6 +723,7 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 				"isIndexPlayer",
 				"getIndexType",
 				"getEntityAtIndex",
+				"getTrackedEntityAtIndex",
 				"getPos"
 		};
 	}
@@ -727,6 +750,8 @@ public class TileEntityMachineRadarNT extends TileEntityMachineBase implements I
 				return getIndexType(context, args);
 			case ("getEntityAtIndex"):
 				return getEntityAtIndex(context, args);
+			case("getTrackedEntityAtIndex"):
+				return getTrackedEntityAtIndex(context, args);
 			case("getPos"):
 				return getPos(context, args);
 		}

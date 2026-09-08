@@ -54,9 +54,13 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidHandler;
 
 @Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")})
-public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase implements IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IRadarCommandReceiver, SimpleComponent, CompatHandler.OCComponent, IFluidCopiable {
+public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase implements IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IRadarCommandReceiver, SimpleComponent, CompatHandler.OCComponent, IFluidCopiable, IFluidHandler {
 	
 	/** Automatic instantiation of generic missiles, i.e. everything that both extends EntityMissileBaseNT and needs a designator */
 	public static final HashMap<ComparableStack, Class<? extends EntityMissileBaseNT>> missiles = new HashMap();
@@ -112,13 +116,16 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	public static final int STATE_READY = 2;
 	
 	public FluidTank[] tanks;
+	public final LaunchPadService service;
 
 	public TileEntityLaunchPadBase() {
 		super(7);
 		this.tanks = new FluidTank[2];
 		this.tanks[0] = new FluidTank(Fluids.NONE, 24_000);
 		this.tanks[1] = new FluidTank(Fluids.NONE, 24_000);
+		service = new LaunchPadService(this, tanks);
 	}
+
 
 	@Override
 	public String getName() {
@@ -127,7 +134,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 
 	@Override
 	public boolean canExtractItem(int slot, ItemStack itemStack, int side) {
-		return false;
+		return service.draining() && service.empty() && slot == 0;
 	}
 
 	@Override
@@ -137,7 +144,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack stack) {
-		return slot == 0 && this.isMissileValid(stack);
+		return slot == 0 && stack != null && this.isMissileValid(stack) && (!service.active() || (service.filling() && service.empty()));
 	}
 	
 	public abstract DirPos[] getConPos();
@@ -162,8 +169,10 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 			this.prevRedstonePower = this.redstonePower;
 			
 			this.power = Library.chargeTEFromItems(slots, 2, power, maxPower);
-			tanks[0].loadTank(3, 4, slots);
-			tanks[1].loadTank(5, 6, slots);
+			if(!service.active()) {
+				tanks[0].loadTank(3, 4, slots);
+				tanks[1].loadTank(5, 6, slots);
+			}
 			
 			if(this.isMissileValid()) {
 				if(slots[0].getItem() instanceof ItemMissile) {
@@ -213,6 +222,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		service.read(nbt);
 		power = nbt.getLong("power");
 		tanks[0].readFromNBT(nbt, "t0");
 		tanks[1].readFromNBT(nbt, "t1");
@@ -229,6 +239,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		service.write(nbt);
 		nbt.setLong("power", power);
 		tanks[0].writeToNBT(nbt, "t0");
 		tanks[1].writeToNBT(nbt, "t1");
@@ -269,7 +280,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Override public void setPower(long power) { this.power = power; }
 	@Override public long getMaxPower() { return maxPower; }
 	@Override public FluidTank[] getAllTanks() { return this.tanks; }
-	@Override public FluidTank[] getReceivingTanks() { return this.tanks; }
+	@Override public FluidTank[] getReceivingTanks() { return service.active() ? FluidTank.EMPTY_ARRAY : this.tanks; }
 	
 	@Override public boolean canConnect(ForgeDirection dir) {
 		return dir != ForgeDirection.UP && dir != ForgeDirection.DOWN;
@@ -286,28 +297,10 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 		return new GUILaunchPadLarge(player.inventory, this);
 	}
 	
-	@SuppressWarnings("incomplete-switch") //shut up
 	public void setFuel(ItemMissile missile) {
-		switch(missile.fuel) {
-		case ETHANOL_PEROXIDE:
-			tanks[0].setTankType(Fluids.ETHANOL);
-			tanks[1].setTankType(Fluids.PEROXIDE);
-			break;
-		case KEROSENE_PEROXIDE:
-			tanks[0].setTankType(Fluids.KEROSENE);
-			tanks[1].setTankType(Fluids.PEROXIDE);
-			break;
-		case KEROSENE_LOXY:
-			tanks[0].setTankType(Fluids.KEROSENE);
-			tanks[1].setTankType(Fluids.OXYGEN);
-			break;
-		case JETFUEL_LOXY:
-			tanks[0].setTankType(Fluids.KEROSENE_REFORM);
-			tanks[1].setTankType(Fluids.OXYGEN);
-			break;
-		}
+		service.configure(new ItemStack(missile));
 	}
-	
+
 	/** Requires the missile slot to be non-null and he item to be compatible */
 	public boolean isMissileValid() {
 		return slots[0] != null && isMissileValid(slots[0]);
@@ -318,7 +311,8 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	}
 	
 	public boolean hasFuel() {
-		if(this.power < 75_000) return false;
+		service.configure(slots[0]);
+		if(this.power < 75_000 || !service.fueled(0)) return false;
 		
 		if(slots[0] != null && slots[0].getItem() instanceof ItemMissile) {
 			ItemMissile missile = (ItemMissile) slots[0].getItem();
@@ -399,6 +393,9 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 		return this.launchToCoordinate(targetX, targetZ);
 	}
 	
+	private EntityMissileAntiBallistic trackedInterceptor;
+	private String trackedTargetUuid;
+
 	public BombReturnCode launchToEntity(Entity entity) {
 		if(!canLaunch()) return BombReturnCode.ERROR_MISSING_COMPONENT;
 		
@@ -408,6 +405,8 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 			if(e instanceof EntityMissileAntiBallistic) {
 				EntityMissileAntiBallistic abm = (EntityMissileAntiBallistic) e;
 				abm.tracking = entity;
+				trackedInterceptor = abm;
+				trackedTargetUuid = entity.getUniqueID().toString();
 			}
 			
 			finalizeLaunch(e);
@@ -443,7 +442,7 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	
 	/** Full launch condition, checks if the item is launchable, fuel and power are present and any additional checks based on launch pad type */
 	public boolean canLaunch() {
-		return this.isMissileValid() && this.hasFuel() && this.isReadyForLaunch();
+		return !service.active() && this.isMissileValid() && this.hasFuel() && this.isReadyForLaunch();
 	}
 	
 	public int getFuelState() {
@@ -471,6 +470,55 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	/** Any extra conditions for launching in addition to the missile being valid and fueled */
 	public abstract boolean isReadyForLaunch();
 	public abstract double getLaunchOffset();
+
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] verifyMEInterface(Context context, Arguments args) {
+		return new Object[] {LaunchPadService.verifyMEInterface(this, context, args.checkString(0), args.checkInteger(1), args.checkInteger(2), args.checkString(3))};
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] verifyTransposer(Context context, Arguments args) {
+		return new Object[] {LaunchPadService.verifyTransposer(this, context, args.checkString(0), args.checkInteger(1))};
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] setServiceMode(Context context, Arguments args) {
+		service.setMode(args.checkString(0));
+		service.configure(getStackInSlot(0));
+		return new Object[] {true};
+	}
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getLogisticsInfo(Context context, Arguments args) {
+		service.configure(getStackInSlot(0));
+		return new Object[] {service.info(isMissileValid(), isMissileValid() && hasFuel() && isReadyForLaunch(), 0)};
+	}
+	@Callback(direct = true)
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getPayloadIdentity(Context context, Arguments args) {
+		if(slots[0] == null) return new Object[] {"empty"};
+		return new Object[] {slots[0].getItem() == ModItems.missile_anti_ballistic ? "anti_ballistic" : "other"};
+	}
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] launchPrepared(Context context, Arguments args) {
+		if(!LaunchPadService.HOLD.equals(service.mode())) return new Object[] {false};
+		service.setMode(LaunchPadService.OFF);
+		try {
+			return new Object[] {launchToCoordinate(args.checkInteger(0), args.checkInteger(1)) == BombReturnCode.LAUNCHED};
+		} finally { service.setMode(LaunchPadService.HOLD); }
+	}
+
+	@Override public int fill(ForgeDirection side, FluidStack stack, boolean execute) { service.refreshRequirements(getStackInSlot(0)); return service.fill(side, stack, execute); }
+	@Override public FluidStack drain(ForgeDirection side, FluidStack stack, boolean execute) { return service.drain(side, stack, execute); }
+	@Override public FluidStack drain(ForgeDirection side, int amount, boolean execute) { return service.drain(side, amount, execute); }
+	@Override public boolean canFill(ForgeDirection side, Fluid fluid) { service.refreshRequirements(getStackInSlot(0)); return service.canFill(side, fluid); }
+	@Override public boolean canDrain(ForgeDirection side, Fluid fluid) { return service.canDrain(side, fluid); }
+	@Override public FluidTankInfo[] getTankInfo(ForgeDirection side) { return service.getTankInfo(side); }
 
 	// do some opencomputer stuff
 	@Override
@@ -530,6 +578,54 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 
 	@Callback(direct = true)
 	@Optional.Method(modid = "OpenComputers")
+	public Object[] getTargetingInfo(Context context, Arguments args) {
+		return new Object[] {true, worldObj.provider.dimensionId};
+	}
+
+	public static boolean matchesTrackedTarget(Entity target, int id, String uuid, int dimension) {
+		return target instanceof EntityMissileBaseNT && !target.isDead && target.dimension == dimension
+				&& target.getEntityId() == id && target.getUniqueID().toString().equals(uuid);
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] launchTracked(Context context, Arguments args) {
+		int id = args.checkInteger(0);
+		String uuid = args.checkString(1);
+		int dimension = args.checkInteger(2);
+		if(dimension != worldObj.provider.dimensionId) return new Object[] {false, "WRONG_DIMENSION"};
+		Entity target = worldObj.getEntityByID(id);
+		if(!matchesTrackedTarget(target, id, uuid, dimension)) return new Object[] {false, "TARGET_LOST"};
+		if(slots[0] == null || slots[0].getItem() != ModItems.missile_anti_ballistic)
+			return new Object[] {false, "NOT_ABM"};
+		boolean launched = sendCommandEntity(target);
+		return new Object[] {launched, launched ? "LAUNCHED" : "NOT_READY",
+				launched && trackedInterceptor != null ? trackedInterceptor.getUniqueID().toString() : ""};
+	}
+
+	public static String interceptorOutcome(EntityMissileAntiBallistic interceptor, String interceptorUuid,
+			Entity target, int targetId, String targetUuid, int dimension) {
+		if(interceptor == null || !interceptor.getUniqueID().toString().equals(interceptorUuid)) return "UNKNOWN";
+		if(!matchesTrackedTarget(target, targetId, targetUuid, dimension)) return "TARGET_UNAVAILABLE";
+		return interceptor.isDead ? "MISS" : "IN_FLIGHT";
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getInterceptorStatus(Context context, Arguments args) {
+		String interceptorUuid = args.checkString(0);
+		int targetId = args.checkInteger(1);
+		String targetUuid = args.checkString(2);
+		int dimension = args.checkInteger(3);
+		if(dimension != worldObj.provider.dimensionId || !targetUuid.equals(trackedTargetUuid)) return new Object[] {"UNKNOWN"};
+		if(trackedInterceptor != null && !trackedInterceptor.isDead
+				&& worldObj.getEntityByID(trackedInterceptor.getEntityId()) != trackedInterceptor) return new Object[] {"UNKNOWN"};
+		return new Object[] {interceptorOutcome(trackedInterceptor, interceptorUuid,
+				worldObj.getEntityByID(targetId), targetId, targetUuid, dimension)};
+	}
+
+	@Callback(direct = true)
+	@Optional.Method(modid = "OpenComputers")
 	public Object[] getPos(Context context, Arguments args) {
 		return new Object[] {xCoord, yCoord, zCoord};
 	}
@@ -538,11 +634,21 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Optional.Method(modid = "OpenComputers")
 	public String[] methods() {
 		return new String[] {
+				"verifyMEInterface",
+				"verifyTransposer",
+				"setServiceMode",
+				"getLogisticsInfo",
+				"getPayloadIdentity",
+				"launchPrepared",
+
 				"getEnergyInfo",
 				"getFluid",
 				"canLaunch",
 				"getTier",
 				"launch",
+				"launchTracked",
+				"getInterceptorStatus",
+				"getTargetingInfo",
 				"getPos"
 		};
 	}
@@ -551,6 +657,13 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] invoke(String method, Context context, Arguments args) throws Exception {
 		switch(method) {
+			case "verifyMEInterface": return verifyMEInterface(context, args);
+			case "verifyTransposer": return verifyTransposer(context, args);
+			case "setServiceMode": return setServiceMode(context, args);
+			case "getLogisticsInfo": return getLogisticsInfo(context, args);
+			case "getPayloadIdentity": return getPayloadIdentity(context, args);
+			case "launchPrepared": return launchPrepared(context, args);
+
 			case ("getEnergyInfo"):
 				return getEnergyInfo(context, args);
 			case ("getFluid"):
@@ -561,6 +674,12 @@ public abstract class TileEntityLaunchPadBase extends TileEntityMachineBase impl
 				return getTier(context, args);
 			case ("launch"):
 				return launch(context, args);
+			case ("getInterceptorStatus"):
+				return getInterceptorStatus(context, args);
+			case ("launchTracked"):
+				return launchTracked(context, args);
+			case ("getTargetingInfo"):
+				return getTargetingInfo(context, args);
 			case ("getPos"):
 				return getPos(context, args);
 		}

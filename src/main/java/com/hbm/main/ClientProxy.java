@@ -301,6 +301,7 @@ public class ClientProxy extends ServerProxy {
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityMachineRadGen.class, new RenderRadGen());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityGeiger.class, new RenderGeiger());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityMachineRadarNT.class, new RenderRadar());
+		ClientRegistry.bindTileEntitySpecialRenderer(com.hbm.tileentity.machine.TileEntityMachineRadarRadome.class, new com.hbm.render.tileentity.RenderRadarRadome());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityMachineRadarLarge.class, new RenderRadarLarge());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityMachineRadarScreen.class, new RenderRadarScreen());
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityMachineSatLink.class, new RenderSatLink());
@@ -766,6 +767,8 @@ public class ClientProxy extends ServerProxy {
 	public void registerBlockRenderer() {
 
 		RenderingRegistry.registerBlockHandler(new RenderISBRHUniversal());
+		com.hbm.blocks.machine.BlockIntelProjector.renderID = RenderingRegistry.getNextAvailableRenderId();
+		RenderingRegistry.registerBlockHandler(new com.hbm.render.block.RenderProjectorTable());
 
 		/// STOP DOING THIS ///
 		RenderingRegistry.registerBlockHandler(new RenderScaffoldBlock());
@@ -773,6 +776,10 @@ public class ClientProxy extends ServerProxy {
 		RenderingRegistry.registerBlockHandler(new RenderSteelBeam());
 		RenderingRegistry.registerBlockHandler(new RenderSteelWall());
 		RenderingRegistry.registerBlockHandler(new RenderSteelCorner());
+		com.hbm.blocks.machine.BlockPropellantTank.tankRenderID = RenderingRegistry.getNextAvailableRenderId();
+		RenderPropellantTank propellantRenderer = new RenderPropellantTank();
+		RenderingRegistry.registerBlockHandler(propellantRenderer);
+		ClientRegistry.bindTileEntitySpecialRenderer(com.hbm.tileentity.machine.storage.TileEntityPropellantTank.class, propellantRenderer);
 		RenderingRegistry.registerBlockHandler(new RenderBarrel());
 		RenderingRegistry.registerBlockHandler(new RenderFence());
 		RenderingRegistry.registerBlockHandler(new RenderBarbedWire());

@@ -147,6 +147,20 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 		return "DISPLAYED | "+view.mode+" | X="+scene.targetX+" Z="+scene.targetZ+" | "+scene.findings.size()
 				+" findings | geometry "+p.coveredColumns()+"/"+(p.width*p.depth)+" columns | floor="+view.floor;
 	}
+	public int visibleFindingCount() {
+		if(displayed==null) return 0;
+		int count=0;for(IntelFinding f:displayed.findings) if(displayed.projection.findingInLayer(view.mode,f)) count++;
+		return count;
+	}
+	public int nextVisibleFinding(int direction) {
+		if(displayed==null) return 0;
+		int count=displayed.findings.size(),index=view.selected;
+		for(int i=0;i<count;i++) {
+			index=direction<0?(index<=1?count:index-1):(index>=count?1:index+1);
+			if(displayed.projection.findingInLayer(view.mode,displayed.findings.get(index-1))) return index;
+		}
+		return 0;
+	}
 	public String finding(int index) {
 		IntelScanResult scene=displayed;
 		if(scene==null || index<1 || index>scene.findings.size()) throw new IllegalArgumentException("Finding out of range");
@@ -170,7 +184,7 @@ public class TileEntityIntelProjector extends TileEntity implements SimpleCompon
 		IntelScanResult scene=new IntelScanResult();scene.mode=IntelScanMode.COMBINED;scene.projection=result.projection;
 		scene.targetX=result.targetX;scene.targetZ=result.targetZ;scene.dimension=result.dimension;scene.completedAt=result.completedAt;
 		scene.findings.addAll(result.findings);displayed=scene;sceneId=id;frequency=freq;
-		view.selected=0;view.configure("view","exterior",scene.projection,scene.findings.size());pack();changed();
+		view.selected=0;view.configure("view","combined",scene.projection,scene.findings.size());pack();changed();
 		return new Object[]{true,status()};
 	}
 	@Callback(doc="function(action:string,value:string):boolean,string -- view, floor, cut, select, rotate, scale, terrain")

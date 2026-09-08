@@ -16,6 +16,8 @@ public class RadarEntry {
 	public int posZ;
 	public int dim;
 	public int entityID;
+	/** Server-side scan identity; deliberately not added to the display packet format. */
+	public String entityUuid;
 	/** Whether this radar entry should be counted for the redstone output */
 	public boolean redstone;
 	

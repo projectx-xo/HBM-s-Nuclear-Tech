@@ -172,8 +172,14 @@ public class EntityArtilleryRocket extends EntityThrowableInterp implements IChu
 	public void loadNeighboringChunks(int newChunkX, int newChunkZ) {
 		if(!worldObj.isRemote && loaderTicket != null) {
 
+			ChunkCoordIntPair destination = new ChunkCoordIntPair(newChunkX, newChunkZ);
+			ForgeChunkManager.forceChunk(loaderTicket, destination);
+			// A ticket prevents unloading but does not materialize the destination.
+			// World needs it loaded before it reconciles addedToChunk after this tick.
+			worldObj.getChunkFromChunkCoords(newChunkX, newChunkZ);
+
 			for(ChunkCoordIntPair chunk : ImmutableSet.copyOf(loaderTicket.getChunkList())) {
-				ForgeChunkManager.unforceChunk(loaderTicket, chunk);
+				if(!chunk.equals(destination)) ForgeChunkManager.unforceChunk(loaderTicket, chunk);
 			}
 
 			loadedChunks.clear();

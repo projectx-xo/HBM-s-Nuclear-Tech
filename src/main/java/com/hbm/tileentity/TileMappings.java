@@ -129,6 +129,7 @@ public class TileMappings {
 		put(TileEntityMachineSiren.class, "tileentity_siren");
 		put(TileEntityMachineRadGen.class, "tileentity_radgen");
 		put(TileEntityMachineRadarNT.class, "tileentity_radar");
+		put(com.hbm.tileentity.machine.TileEntityMachineRadarRadome.class, "tileentity_radar_radome");
 		put(TileEntityMachineRadarLarge.class, "tileentity_radar_large");
 		put(TileEntityMachineRadarScreen.class, "tileentity_radar_screen");
 		put(TileEntityIntelProjector.class, "tileentity_intel_projector");
@@ -171,6 +172,7 @@ public class TileMappings {
 		put(TileEntitySoyuzLauncher.class, "tileentity_soyuz_launcher");
 		put(TileEntityLaunchpadSoyuz.class, "tileentity_launchpad_soyuz");
 		put(TileEntityTesla.class, "tileentity_tesla_coil");
+		put(TileEntityPropellantTank.class, "tileentity_propellant_tank");
 		put(TileEntityBarrel.class, "tileentity_fluid_barrel");
 		put(TileEntityCyberCrab.class, "tileentity_crabs");
 		put(TileEntitySoyuzCapsule.class, "tileentity_soyuz_capsule");

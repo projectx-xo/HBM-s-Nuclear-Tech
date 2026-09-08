@@ -19,6 +19,7 @@ public final class IntelProjectionScanner {
 		boolean loaded(int x, int z);
 		/** Low eight bits: geometry; bit eight: natural terrain; bit nine: glazing; remaining bits: block ID and metadata. */
 		int cell(int x, int y, int z);
+		default void captureModel(IntelProjection p,int x,int y,int z) {}
 	}
 	public void process(Access world, IntelScanJob job, IntelScanResult result, int columns) {
 		if(result.mode!=IntelScanMode.COMBINED) return;
@@ -33,6 +34,7 @@ public final class IntelProjectionScanner {
 					int cell=world.cell(p.originX+x,y,p.originZ+z);
 					p.set(x,y,z,cell&255,(cell&256)!=0,(cell&512)!=0);
 					p.captureBlock(x,y,z,cell>>>10);
+					world.captureModel(p,x,y,z);
 				}
 			}
 			job.processedWork++;
@@ -51,6 +53,39 @@ public final class IntelProjectionScanner {
 			private int lastX=Integer.MIN_VALUE,lastZ;
 			private boolean neighbors;
 			public boolean loaded(int x,int z) { return world.getChunkProvider().chunkExists(x>>4,z>>4); }
+			public void captureModel(IntelProjection p,int x,int y,int z) {
+				int cx=p.originX+x,cy=y,cz=p.originZ+z;
+				Block block=world.getBlock(cx,cy,cz);
+				int kind=IntelProjectionMachine.kind(block);
+				if(kind==0) {
+					if(block!=com.hbm.blocks.ModBlocks.dummy_plate_launch_table && block!=com.hbm.blocks.ModBlocks.dummy_port_launch_table) return;
+					net.minecraft.tileentity.TileEntity te=world.getTileEntity(cx,cy,cz);
+					if(!(te instanceof com.hbm.tileentity.machine.TileEntityDummy)) return;
+					com.hbm.tileentity.machine.TileEntityDummy d=(com.hbm.tileentity.machine.TileEntityDummy)te;
+					cx=d.targetX;cy=d.targetY;cz=d.targetZ;kind=5;
+				} else if(kind!=5) {
+					// Follow only this machine's dummy chain, bounded and loaded-chunk-only.
+					for(int steps=0;steps<64;steps++) {
+						if(!inside(p,cx,cy,cz) || !loaded(cx,cz) || world.getBlock(cx,cy,cz)!=block) return;
+						int meta=world.getBlockMetadata(cx,cy,cz);if(meta>=12) break;
+						net.minecraftforge.common.util.ForgeDirection dir=net.minecraftforge.common.util.ForgeDirection.getOrientation(meta%6).getOpposite();
+						cx+=dir.offsetX;cy+=dir.offsetY;cz+=dir.offsetZ;
+						if(steps==63) return;
+					}
+				}
+				if(!inside(p,cx,cy,cz) || !loaded(cx,cz) || IntelProjectionMachine.kind(world.getBlock(cx,cy,cz))!=kind) return;
+				int key=((cz-p.originZ)*p.width+cx-p.originX)*256+cy;
+				if(!p.machines.containsKey(key)) {
+					if(p.machines.size()>=256) return; // Uncaptured machines retain conservative block geometry.
+					IntelProjectionMachine m=IntelProjectionMachine.capture(cx-p.originX,cy,cz-p.originZ,
+						world.getBlockMetadata(cx,cy,cz),kind,world.getTileEntity(cx,cy,cz));
+					if(m==null) return;p.machines.put(key,m);
+				}
+				p.setModelCell(x,y,z);
+			}
+			private boolean inside(IntelProjection p,int x,int y,int z) {
+				return x>=p.originX && x<p.originX+p.width && z>=p.originZ && z<p.originZ+p.depth && y>=0 && y<256;
+			}
 			public int cell(int x,int y,int z) {
 				Block b=world.getBlock(x,y,z);
 				if(b==Blocks.air || b.getMaterial()==Material.air) return 0;

@@ -17,24 +17,7 @@ public class XSatelliteRegistry {
 	public static final HashMap<ComparableStack, Class<? extends SatelliteBase>> itemToClass = new HashMap<>();
 	
 	public static void register() {
-
-		// ID mapping
-		idToClass.put(0, SatelliteMapper.class);
-		idToClass.put(1, SatelliteScanner.class);
-		idToClass.put(2, SatelliteRadar.class);
-		idToClass.put(3, SatelliteDeathRay.class);
-		idToClass.put(4, SatelliteResonator.class);
-		idToClass.put(5, SatelliteRelay.class);
-		idToClass.put(6, SatelliteMiner.class);
-		idToClass.put(7, SatelliteLunarMiner.class);
-		idToClass.put(8, SatelliteHorizons.class);
-		idToClass.put(9, SatellitePrecisionLaser.class);
-		idToClass.put(10, SatelliteDetector.class);
-		idToClass.put(11, SatelliteRayScan.class);
-		idToClass.put(12, SatelliteScience.class);
-		idToClass.put(13, SatelliteSurfaceRecon.class);
-		idToClass.put(14, SatelliteSubsurfaceIntel.class);
-		idToClass.put(15, SatelliteCombinedIntel.class);
+		registerIds();
 
 		// item to sat type mapping
 		registerSatellite(SatelliteMapper.class,			new ComparableStack(ModItems.satellite, 1, EnumSatType.SPY));
@@ -53,6 +36,7 @@ public class XSatelliteRegistry {
 		registerSatellite(SatelliteSurfaceRecon.class,		new ComparableStack(ModItems.satellite, 1, EnumSatType.SURFACE_RECON));
 		registerSatellite(SatelliteSubsurfaceIntel.class,	new ComparableStack(ModItems.satellite, 1, EnumSatType.SUBSURFACE_INTEL));
 		registerSatellite(SatelliteCombinedIntel.class,		new ComparableStack(ModItems.satellite, 1, EnumSatType.COMBINED_INTEL));
+		registerSatellite(SatelliteSatComRelay.class,		new ComparableStack(ModItems.satellite, 1, EnumSatType.SATCOM_RELAY));
 		
 		// and all the legacy crap
 		registerSatellite(SatelliteMapper.class, ModItems.sat_mapper);
@@ -62,6 +46,26 @@ public class XSatelliteRegistry {
 		registerSatellite(SatelliteResonator.class, ModItems.sat_resonator);
 		registerSatellite(SatelliteMiner.class, ModItems.sat_miner);
 		registerSatellite(SatelliteLunarMiner.class, ModItems.sat_lunar_miner);
+	}
+
+	static void registerIds() {
+		idToClass.put(0, SatelliteMapper.class);
+		idToClass.put(1, SatelliteScanner.class);
+		idToClass.put(2, SatelliteRadar.class);
+		idToClass.put(3, SatelliteDeathRay.class);
+		idToClass.put(4, SatelliteResonator.class);
+		idToClass.put(5, SatelliteRelay.class);
+		idToClass.put(6, SatelliteMiner.class);
+		idToClass.put(7, SatelliteLunarMiner.class);
+		idToClass.put(8, SatelliteHorizons.class);
+		idToClass.put(9, SatellitePrecisionLaser.class);
+		idToClass.put(10, SatelliteDetector.class);
+		idToClass.put(11, SatelliteRayScan.class);
+		idToClass.put(12, SatelliteScience.class);
+		idToClass.put(13, SatelliteSurfaceRecon.class);
+		idToClass.put(14, SatelliteSubsurfaceIntel.class);
+		idToClass.put(15, SatelliteCombinedIntel.class);
+		idToClass.put(16, SatelliteSatComRelay.class);
 	}
 
 	/**

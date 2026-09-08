@@ -18,6 +18,7 @@ final class IntelProjectionBlockRenderer {
 	private static final int MAX_BLOCKS=65536;
 	private final IntelProjectionBlockAccess access;
 	private final RenderBlocks renderer;
+	private final IntelProjectionMachineRenderer machines;
 	private static final class TransparentBlock {
 		final int list;final double x,y,z;double distance;
 		TransparentBlock(int list,int x,int y,int z) { this.list=list;this.x=x+.5;this.y=y+.5;this.z=z+.5; }
@@ -29,7 +30,7 @@ final class IntelProjectionBlockRenderer {
 	boolean ready,truncated;
 
 	IntelProjectionBlockRenderer(IntelProjection p,IntelProjectionView view) {
-		access=new IntelProjectionBlockAccess(p,view);renderer=new RenderBlocks(access);
+		access=new IntelProjectionBlockAccess(p,view);renderer=new RenderBlocks(access);machines=new IntelProjectionMachineRenderer(p,view);
 	}
 	void step() {
 		if(ready) return;
@@ -41,7 +42,7 @@ final class IntelProjectionBlockRenderer {
 				if((visited++&63)==0 && System.nanoTime()>=deadline) break;
 				int i=cursor++,y=i&255,column=i>>>8,x=column%access.projection.width,z=column/access.projection.width;
 				Block block=access.getBlock(x,y,z);
-				if(block==Blocks.air || (block.getRenderBlockPass()==1?1:0)!=pass || access.enclosed(x,y,z)) continue;
+				if(access.projection.modelCell(x,y,z) || block==Blocks.air || (block.getRenderBlockPass()==1?1:0)!=pass || access.enclosed(x,y,z)) continue;
 				if(rendered>=MAX_BLOCKS) { truncated=true;ready=true;break; }
 				if(pass==0) {
 					if(list==0) {
@@ -99,6 +100,7 @@ final class IntelProjectionBlockRenderer {
 			}
 		}
 	}
+	void drawMachines() { machines.draw(); }
 	void drawOpaque() { for(int list:opaque) GL11.glCallList(list); }
 	void drawTransparent(double x,double y,double z) {
 		if(Double.isNaN(cameraX) || Math.abs(x-cameraX)+Math.abs(y-cameraY)+Math.abs(z-cameraZ)>.25) {

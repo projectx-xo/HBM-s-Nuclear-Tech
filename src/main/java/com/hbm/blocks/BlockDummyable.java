@@ -40,6 +40,7 @@ import net.minecraft.client.renderer.Tessellator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.lwjgl.opengl.GL11;
@@ -83,8 +84,15 @@ public abstract class BlockDummyable extends BlockContainer implements ICustomBl
 	public void onNeighborBlockChange(World world, int x, int y, int z, Block block) {
 		super.onNeighborBlockChange(world, x, y, z, block);
 
-		if(safeRem) return;
+		if(safeRem || world.isRemote) return;
 
+		// Direct block editors such as WorldEdit may paste the dummies before the core.
+		// Validate next tick so the complete multiblock can be restored first.
+		world.scheduleBlockUpdate(x, y, z, this, 1);
+	}
+
+	@Override
+	public void updateTick(World world, int x, int y, int z, Random rand) {
 		destroyIfOrphan(world, x, y, z);
 	}
 

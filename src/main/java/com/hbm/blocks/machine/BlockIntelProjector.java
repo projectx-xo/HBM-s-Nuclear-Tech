@@ -10,6 +10,10 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 public class BlockIntelProjector extends BlockContainer {
+	public static int renderID;
+	@Override public int getRenderType() { return renderID; }
+	@Override public boolean isOpaqueCube() { return false; }
+	@Override public boolean renderAsNormalBlock() { return false; }
 	public BlockIntelProjector() { super(Material.iron); }
 	@Override public TileEntity createNewTileEntity(World world,int meta) { return new TileEntityIntelProjector(); }
 	@Override public boolean onBlockActivated(World world,int x,int y,int z,EntityPlayer player,int side,float hitX,float hitY,float hitZ) {

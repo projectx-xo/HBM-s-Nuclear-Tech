@@ -4461,6 +4461,7 @@ item.satellite.precision_laser.name=Orbital Precision Laser
 item.satellite.radar.name=Radar Satellite
 item.satellite.ray_scan.name=Narrowband Emission Scanning Satellite
 item.satellite.relay.name=RoR Relay Satellite
+item.satellite.satcom_relay.name=Communications Satellite
 item.satellite.scanner.name=Depth Scanning Satellite
 item.satellite.science.name=Space Laboratory
 item.satellite.science_assembler.name=Space Laboratory - 0G Assembler
@@ -6702,3 +6703,31 @@ desc.gui.upgrade.effectiveness= * §aEffectiveness§r: Stacks to level 3
 desc.gui.upgrade.overdrive= * §7Overdrive§r: Stacks to level 3
 desc.gui.upgrade.power= * §1Power-Saving§r: Stacks to level 3
 desc.gui.upgrade.speed= * §4Speed§r: Stacks to level 3
+
+tile.machine_radar_radome.name=Advanced Radome Radar
+
+tile.propellant_tank_1.name=Propellant Storage I
+tile.propellant_tank_2.name=Propellant Storage II
+tile.propellant_tank_3.name=Propellant Storage III
+container.propellantTank=Propellant Storage
+propellantTank.typeLocked=Empty a survival tank before selecting a supported missile fluid. Creative tanks have a fixed fluid.
+tile.propellant_tank_creative_peroxide.name=Creative Hydrogen Peroxide Storage
+fluid.hbm_propellant_peroxide=Hydrogen Peroxide
+tile.propellant_tank_creative_ethanol.name=Creative Ethanol Storage
+fluid.hbm_propellant_ethanol=Ethanol
+tile.propellant_tank_creative_kerosene.name=Creative Kerosene Storage
+fluid.hbm_propellant_kerosene=Kerosene
+tile.propellant_tank_creative_oxygen.name=Creative Oxygen Storage
+fluid.hbm_propellant_oxygen=Oxygen
+tile.propellant_tank_creative_kerosene_reform.name=Creative Reformed Kerosene Storage
+fluid.hbm_propellant_kerosene_reform=Reformed Kerosene
+
+tile.propellant_tank_creative_hydrogen.name=Creative Hydrogen Propellant Storage
+tile.propellant_tank_creative_xenon.name=Creative Xenon Propellant Storage
+tile.propellant_tank_creative_balefire.name=Creative Balefire Propellant Storage
+fluid.hbm_propellant_hydrogen=Hydrogen
+fluid.hbm_propellant_xenon=Xenon
+fluid.hbm_propellant_balefire=Balefire
+
+radar.target.payload_nuclear=Missile (Nuclear Payload)
+radar.target.payload_thermonuclear=Missile (Thermonuclear Payload)

@@ -7,7 +7,7 @@ import com.hbm.saveddata.satellites.SatelliteCombinedIntel;
 import com.hbm.saveddata.satellites.SatelliteIntelligenceBase;
 import com.hbm.saveddata.satellites.SatelliteRayScan;
 import com.hbm.saveddata.satellites.SatelliteRayScan.RayEvent;
-import com.hbm.saveddata.satellites.SatelliteRelay;
+import com.hbm.saveddata.satellites.SatelliteSatComRelay;
 import com.hbm.saveddata.satellites.intel.IntelFinding;
 import com.hbm.saveddata.satellites.intel.IntelScanResult;
 import com.hbm.saveddata.satellites.intel.IntelScanMode;
@@ -140,7 +140,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 	private boolean hasActiveRelaySatellite() {
 		if(worldObj == null || worldObj.isRemote || !connected) return false;
 		SatelliteBase sat = SatelliteSavedData.getData(worldObj).getSatFromFreq(freq);
-		return sat instanceof SatelliteRelay;
+		return sat instanceof SatelliteSatComRelay;
 	}
 
 	private SatelliteIntelligenceBase getIntelligenceSatellite() {
@@ -702,6 +702,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 			"intelSetTarget",
 			"intelStartScan",
 			"intelStatus",
+			"intelProjection",
 			"intelSummary",
 			"intelFindingCount",
 			"intelGetFinding",
@@ -733,6 +734,7 @@ public class TileEntityMachineSatLink extends TileEntityTickingBase implements I
 			case ("intelSetTarget"): return intelSetTarget(context, args);
 			case ("intelStartScan"): return intelStartScan(context, args);
 			case ("intelStatus"): return intelStatus(context, args);
+			case ("intelProjection"): return intelProjection(context, args);
 			case ("intelSummary"): return intelSummary(context, args);
 			case ("intelFindingCount"): return intelFindingCount(context, args);
 			case ("intelGetFinding"): return intelGetFinding(context, args);

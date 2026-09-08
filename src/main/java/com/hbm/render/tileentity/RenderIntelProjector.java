@@ -43,12 +43,21 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			GL11.glDisable(GL11.GL_LIGHTING);GL11.glDisable(GL11.GL_TEXTURE_2D);GL11.glDisable(GL11.GL_CULL_FACE);
 			GL11.glEnable(GL11.GL_BLEND);GL11.glBlendFunc(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA);
 			GL11.glDisable(GL11.GL_ALPHA_TEST);
-			// A dark emitter plate and a narrow illuminated rim on the physical block.
-			GL11.glColor4f(.035F,.065F,.085F,1);GL11.glBegin(GL11.GL_QUADS);
-			vertex(-.47,1.005,-.47);vertex(-.47,1.005,.47);vertex(.47,1.005,.47);vertex(.47,1.005,-.47);GL11.glEnd();
-			GL11.glColor4f(.15F,.8F,1,.9F);GL11.glLineWidth(2);GL11.glBegin(GL11.GL_LINE_LOOP);
-			vertex(-.43,1.008,-.43);vertex(-.43,1.008,.43);vertex(.43,1.008,.43);vertex(.43,1.008,-.43);GL11.glEnd();
-			if(tile.displayed==null || !tile.displayed.projection.hasBlockStates) { label(tile.status(),0,1.4,0,.012F,0x78DFF7);return; }
+			// Recessed glass bed; the textured chassis is rendered in the solid block pass.
+			GL11.glColor4f(.045F,.09F,.095F,1);GL11.glBegin(GL11.GL_QUADS);
+			vertex(-.375,.845,-.375);vertex(-.375,.845,.375);vertex(.375,.845,.375);vertex(.375,.845,-.375);GL11.glEnd();
+			GL11.glColor4f(.18F,.36F,.35F,1);GL11.glLineWidth(1);GL11.glBegin(GL11.GL_LINES);
+			for(int i=-2;i<=2;i++) {
+				double v=i*.125;vertex(v,.847,-.35);vertex(v,.847,.35);vertex(-.35,.847,v);vertex(.35,.847,v);
+			}GL11.glEnd();
+			// Four small lenses replace the neon perimeter. Amber means no scene is loaded.
+			if(tile.displayed==null) GL11.glColor4f(.8F,.48F,.18F,1);else GL11.glColor4f(.35F,.85F,.75F,1);
+			GL11.glBegin(GL11.GL_QUADS);
+			for(int ix=-1;ix<=1;ix+=2) for(int iz=-1;iz<=1;iz+=2) {
+				double cx=ix*.40625,cz=iz*.40625,r=.035;
+				vertex(cx-r,1.002,cz-r);vertex(cx-r,1.002,cz+r);vertex(cx+r,1.002,cz+r);vertex(cx+r,1.002,cz-r);
+			}GL11.glEnd();
+			if(tile.displayed==null || !tile.displayed.projection.hasBlockStates) return;
 			IntelProjection p=tile.displayed.projection;IntelProjectionView v=tile.view;
 			Cache cache=cache(tile,p,v);
 			if(!cache.builder.ready) { label("Building block model...",0,1.4,0,.012F,0x78DFF7);return; }
@@ -71,6 +80,7 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			GL11.glEnable(GL11.GL_ALPHA_TEST);GL11.glAlphaFunc(GL11.GL_GREATER,.1F);GL11.glEnable(GL11.GL_DEPTH_TEST);
 			GL11.glDepthFunc(GL11.GL_LEQUAL);GL11.glDepthMask(true);GL11.glDisable(GL11.GL_BLEND);
 			GL11.glColor4f(1,1,1,1);cache.builder.drawOpaque();
+			cache.builder.drawMachines();bindTexture(TextureMap.locationBlocksTexture);
 			GL11.glEnable(GL11.GL_BLEND);GL11.glDepthMask(false);
 			// Invert the actual camera transform, including third-person offset and the miniature's rotation/scale.
 			matrixBuffer.clear();GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX,matrixBuffer);modelView.load(matrixBuffer);
@@ -81,6 +91,7 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			int index=0;
 			for(IntelFinding f:tile.displayed.findings) {
 				index++;
+				if(!p.findingInLayer(v.mode,f)) continue;
 				boolean selected=v.selected==index, context=f.targetType.isEmpty();
 				if(context && !selected) continue;
 				int color=selected?0xFFFFFF:f.classification==IntelClassification.MISSILE?0xFF785F:
@@ -117,7 +128,7 @@ public class RenderIntelProjector extends TileEntitySpecialRenderer {
 			if(caches.size()>=8) { it=caches.entrySet().iterator();Map.Entry<TileEntityIntelProjector,Cache> e=it.next();e.getValue().dispose();it.remove(); }
 			c=new Cache();caches.put(tile,c);
 		}
-		String key=p.id+":"+v.floor+":"+v.cutAxis+":"+v.cut+":"+v.terrain+":"+textureGeneration;
+		String key=p.id+":"+v.mode+":"+v.floor+":"+v.cutAxis+":"+v.cut+":"+v.terrain+":"+textureGeneration;
 		if(!key.equals(c.key)) { c.dispose();c.key=key;c.builder=new IntelProjectionBlockRenderer(p,v); }
 		c.builder.step();
 		return c;

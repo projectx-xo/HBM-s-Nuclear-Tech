@@ -48,9 +48,13 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidHandler;
 
 @Optional.InterfaceList({@Optional.Interface(iface = "li.cil.oc.api.network.SimpleComponent", modid = "OpenComputers")})
-public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISidedInventory, IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IBufPacketReceiver, IRadarCommandReceiver, li.cil.oc.api.network.SimpleComponent, CompatHandler.OCComponent {
+public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISidedInventory, IEnergyReceiverMK2, IFluidStandardReceiver, IGUIProvider, IBufPacketReceiver, IRadarCommandReceiver, li.cil.oc.api.network.SimpleComponent, CompatHandler.OCComponent, IFluidHandler {
 
 	private ItemStack slots[];
 
@@ -59,6 +63,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	public int solid;
 	public static final int maxSolid = 100000;
 	public FluidTank[] tanks;
+	public final LaunchPadService service;
 	public PartSize padSize;
 	public int height;
 
@@ -74,6 +79,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 		tanks[0] = new FluidTank(Fluids.NONE, 100000);
 		tanks[1] = new FluidTank(Fluids.NONE, 100000);
 		padSize = PartSize.SIZE_10;
+		service = new LaunchPadService(this, tanks);
 		height = 10;
 	}
 
@@ -146,7 +152,13 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 
 	@Override
 	public boolean isItemValidForSlot(int i, ItemStack stack) {
-		return false;
+		if(stack == null) return false;
+		if(i == 4) return service.filling() && stack.getItem() == ModItems.rocket_fuel;
+		if(i != 0 || (service.active() && (!service.filling() || !service.empty()))) return false;
+		try {
+			MissileStruct parts = getStruct(stack);
+			return parts != null && parts.fuselage != null && ((ItemCustomMissilePart) parts.fuselage).top == padSize;
+		} catch(RuntimeException ex) { return false; }
 	}
 
 	@Override
@@ -186,15 +198,18 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 			if(worldObj.getTotalWorldTime() % 20 == 0)
 				this.updateConnections();
 
-			tanks[0].loadTank(2, 6, slots);
-			tanks[1].loadTank(3, 7, slots);
+			if(!service.active()) {
+				tanks[0].loadTank(2, 6, slots);
+				tanks[1].loadTank(3, 7, slots);
+			}
 
 			power = Library.chargeTEFromItems(slots, 5, power, maxPower);
 
-			if(slots[4] != null && slots[4].getItem() == ModItems.rocket_fuel && solid + 250 <= maxSolid) {
+			if((!service.active() || service.filling()) && slots[4] != null && slots[4].getItem() == ModItems.rocket_fuel && solid + 250 <= maxSolid) {
 
 				this.decrStackSize(4, 1);
 				solid += 250;
+				markDirty();
 			}
 
 			networkPackNT(50);
@@ -276,7 +291,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 
 	public boolean canLaunch() {
 
-		if(power >= maxPower * 0.75 && isMissileValid() && hasFuel())
+		if(!service.active() && power >= maxPower * 0.75 && isMissileValid() && hasFuel())
 			return true;
 
 		return false;
@@ -310,6 +325,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	}
 
 	public void launchTo(int tX, int tZ) {
+		if(!canLaunch()) return;
 
 		worldObj.playSoundEffect(xCoord, yCoord, zCoord, "hbm:weapon.missileTakeOff", 10.0F, 1.0F);
 
@@ -338,7 +354,8 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 
 	private boolean hasFuel() {
 
-		return solidState() != 0 && liquidState() != 0 && oxidizerState() != 0;
+		service.configure(slots[0]);
+		return service.fueled(solid);
 	}
 
 	private void subtractFuel() {
@@ -473,37 +490,13 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	}
 
 	public void updateTypes() {
-
-		MissileStruct multipart = getStruct(slots[0]);
-
-		if(multipart == null || multipart.fuselage == null)
-			return;
-
-		ItemCustomMissilePart fuselage = (ItemCustomMissilePart)multipart.fuselage;
-
-		switch((FuelType)fuselage.attributes[0]) {
-			case KEROSENE:
-				tanks[0].setTankType(Fluids.KEROSENE);
-				tanks[1].setTankType(Fluids.PEROXIDE);
-				break;
-			case HYDROGEN:
-				tanks[0].setTankType(Fluids.HYDROGEN);
-				tanks[1].setTankType(Fluids.OXYGEN);
-				break;
-			case XENON:
-				tanks[0].setTankType(Fluids.XENON);
-				break;
-			case BALEFIRE:
-				tanks[0].setTankType(Fluids.BALEFIRE);
-				tanks[1].setTankType(Fluids.PEROXIDE);
-				break;
-			default: break;
-		}
+		service.configure(slots[0]);
 	}
 
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
+		service.read(nbt);
 		NBTTagList list = nbt.getTagList("items", 10);
 
 		tanks[0].readFromNBT(nbt, "fuel");
@@ -528,6 +521,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@Override
 	public void writeToNBT(NBTTagCompound nbt) {
 		super.writeToNBT(nbt);
+		service.write(nbt);
 
 		NBTTagList list = new NBTTagList();
 
@@ -554,7 +548,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 
 	@Override
 	public int[] getAccessibleSlotsFromSide(int p_94128_1_) {
-		return access;
+		return service.active() ? new int[] {0, 4} : access;
 	}
 
 	@Override
@@ -564,7 +558,7 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 
 	@Override
 	public boolean canExtractItem(int i, ItemStack itemStack, int j) {
-		return false;
+		return service.draining() && (i == 4 || (i == 0 && service.empty()));
 	}
 
 	@Override
@@ -626,8 +620,69 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 
 	@Override
 	public FluidTank[] getReceivingTanks() {
-		return tanks;
+		return service.active() ? FluidTank.EMPTY_ARRAY : tanks;
 	}
+
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] verifyMEInterface(Context context, Arguments args) {
+		return new Object[] {LaunchPadService.verifyMEInterface(this, context, args.checkString(0), args.checkInteger(1), args.checkInteger(2), args.checkString(3))};
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] verifyTransposer(Context context, Arguments args) {
+		return new Object[] {LaunchPadService.verifyTransposer(this, context, args.checkString(0), args.checkInteger(1))};
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] setServiceMode(Context context, Arguments args) {
+		service.setMode(args.checkString(0));
+		service.configure(getStackInSlot(0));
+		return new Object[] {true};
+	}
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getLogisticsInfo(Context context, Arguments args) {
+		service.configure(getStackInSlot(0));
+		return new Object[] {service.info(isMissileValid(), power >= maxPower * 0.75 && isMissileValid() && hasFuel() && hasDesignator(), solid)};
+	}
+	@Callback(direct = true)
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] getPayloadIdentity(Context context, Arguments args) {
+		return new Object[] {slots[0] == null ? "empty" : "other"};
+	}
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] launchPrepared(Context context, Arguments args) {
+		if(!LaunchPadService.HOLD.equals(service.mode())) return new Object[] {false};
+		service.setMode(LaunchPadService.OFF);
+		try {
+			if(!hasDesignator()) return new Object[] {false};
+			setCoords(context, args);
+			if(!canLaunch()) return new Object[] {false};
+			launchFromDesignator();
+			return new Object[] {slots[0] == null};
+		} finally { service.setMode(LaunchPadService.HOLD); }
+	}
+
+	@Callback
+	@Optional.Method(modid = "OpenComputers")
+	public Object[] recoverSolidFuel(Context context, Arguments args) {
+		if(!service.draining() || slots[4] != null) return new Object[] {0};
+		int count = Math.min(64, solid / 250);
+		if(count > 0) { slots[4] = new ItemStack(ModItems.rocket_fuel, count); solid -= count * 250; markDirty(); }
+		return new Object[] {count};
+	}
+
+	@Override public int fill(ForgeDirection side, FluidStack stack, boolean execute) { service.refreshRequirements(getStackInSlot(0)); return service.fill(side, stack, execute); }
+	@Override public FluidStack drain(ForgeDirection side, FluidStack stack, boolean execute) { return service.drain(side, stack, execute); }
+	@Override public FluidStack drain(ForgeDirection side, int amount, boolean execute) { return service.drain(side, amount, execute); }
+	@Override public boolean canFill(ForgeDirection side, Fluid fluid) { service.refreshRequirements(getStackInSlot(0)); return service.canFill(side, fluid); }
+	@Override public boolean canDrain(ForgeDirection side, Fluid fluid) { return service.canDrain(side, fluid); }
+	@Override public FluidTankInfo[] getTankInfo(ForgeDirection side) { return service.getTankInfo(side); }
 
 	// do some opencomputer stuff
 	@Override
@@ -701,6 +756,14 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@Optional.Method(modid = "OpenComputers")
 	public String[] methods() {
 		return new String[] {
+				"verifyMEInterface",
+				"verifyTransposer",
+				"setServiceMode",
+				"getLogisticsInfo",
+				"getPayloadIdentity",
+				"launchPrepared",
+				"recoverSolidFuel",
+
 				"getEnergyInfo",
 				"getContents",
 				"getLaunchInfo",
@@ -714,6 +777,14 @@ public class TileEntityLaunchTable extends TileEntityLoadedBase implements ISide
 	@Optional.Method(modid = "OpenComputers")
 	public Object[] invoke(String method, Context context, Arguments args) throws Exception {
 		switch(method) {
+			case "verifyMEInterface": return verifyMEInterface(context, args);
+			case "verifyTransposer": return verifyTransposer(context, args);
+			case "setServiceMode": return setServiceMode(context, args);
+			case "getLogisticsInfo": return getLogisticsInfo(context, args);
+			case "getPayloadIdentity": return getPayloadIdentity(context, args);
+			case "launchPrepared": return launchPrepared(context, args);
+			case "recoverSolidFuel": return recoverSolidFuel(context, args);
+
 			case ("getEnergyInfo"):
 				return getEnergyInfo(context, args);
 			case ("getContents"):

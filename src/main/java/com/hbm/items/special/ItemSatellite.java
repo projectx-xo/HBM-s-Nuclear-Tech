@@ -37,16 +37,20 @@ public class ItemSatellite extends ItemEnumMulti implements ISatChip {
 		SURFACE_RECON,
 		SUBSURFACE_INTEL,
 		COMBINED_INTEL,
+		SATCOM_RELAY,
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerIcons(IIconRegister reg) {
-		super.registerIcons(reg);
-		// Temporary artwork reuse until dedicated intelligence satellite textures are added.
-		this.icons[EnumSatType.SURFACE_RECON.ordinal()] = reg.registerIcon(this.getIconString() + ".spy");
-		this.icons[EnumSatType.SUBSURFACE_INTEL.ordinal()] = reg.registerIcon(this.getIconString() + ".scanner");
-		this.icons[EnumSatType.COMBINED_INTEL.ordinal()] = reg.registerIcon(this.getIconString() + ".spy");
+		this.icons = new net.minecraft.util.IIcon[EnumSatType.values().length];
+		for(EnumSatType type : EnumSatType.values()) {
+			String texture = type.name().toLowerCase(java.util.Locale.US);
+			if(type == EnumSatType.SURFACE_RECON || type == EnumSatType.COMBINED_INTEL) texture = "spy";
+			if(type == EnumSatType.SUBSURFACE_INTEL) texture = "scanner";
+			if(type == EnumSatType.SATCOM_RELAY) texture = "detector";
+			this.icons[type.ordinal()] = reg.registerIcon(this.getIconString() + "." + texture);
+		}
 	}
 
 	@Override
